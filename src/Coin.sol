@@ -9,7 +9,7 @@ contract Coin {
 
     mapping (address => mapping (address => uint256)) private _allowed;
 
-    uint256 private _totalSupply = 1000;
+    uint256 private _totalSupply = 1000000;
 
     constructor () public {
         _balances[msg.sender] = _totalSupply;

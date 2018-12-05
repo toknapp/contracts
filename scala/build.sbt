@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      library.dryWeb3jz % Test,
+      library.dryWeb3jz,
       library.scalaTest % Test,
       library.scalaCheck % Test,
       library.dryTest % Test,
