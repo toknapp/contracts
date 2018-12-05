@@ -1,5 +1,6 @@
 package co.upvest.contracts
 
+import co.upvest.dry.essentials._
 import co.upvest.dry.essentials.bytes._
 import co.upvest.dry.cryptoadt.secp256k1
 import co.upvest.dry.cryptoadt.ethereum.{ChainId, Wallet, Address, Wei}
@@ -56,4 +57,8 @@ object TestUtils {
 
   def accountIsEmpty(a: Address): Boolean =
     Await.result(web3jz.balance(a), Duration.Inf) == Wei.Zero
+
+  def loadContractBinary(contract: String): Bytes = scala.io.Source.fromFile(
+    s"${sys.env("CONTRACT_BUILD_PATH")}/$contract.bin"
+  ).mkString.hex.get
 }

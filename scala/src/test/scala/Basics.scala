@@ -12,9 +12,10 @@ import co.upvest.dry.web3jz.Fees
 
 import cats.instances.list._
 import cats.syntax.option._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import TestUtils.{web3jz, Faucet, WeiRange, accountIsEmpty}
+import TestUtils.{web3jz, Faucet, WeiRange, accountIsEmpty, loadContractBinary}
 
 class Basics extends WordSpec
   with Matchers with ScalaFutures with GeneratorDrivenPropertyChecks
@@ -24,6 +25,32 @@ class Basics extends WordSpec
     "have a non-negative balance" in {
       TestUtils.faucets >>| { _.address } >>| { a =>
         whenReady(web3jz balance a) { _ should not be Wei.Zero }
+      }
+    }
+
+    "be able to deploy a contract" in {
+      val f = pick[Faucet]
+      val data = loadContractBinary("Echo")
+      whenReady(
+        for {
+          gp <- web3jz.gasPrice()
+          n <- web3jz.nonce(f)
+          (tx, a) = web3jz.contract(
+            f,
+            value = Wei.Zero,
+            gasPrice = gp,
+            gasLimit =
+              Fees.TxCreate + Fees.Transaction + Fees.codeDeposit(data),
+            nonce = n,
+            data
+          )
+          c0 <- web3jz.code(a)
+          _ <- web3jz.submit(tx)
+          c1 <- web3jz.code(a)
+        } yield (c0, c1)
+      ) { case (c0, c1) =>
+        c0 shouldBe Array[Byte](0) // TODO: wth? how can one then differentiate between a contract without code and code == [0]?
+        c1 should not be empty
       }
     }
   }
@@ -50,7 +77,7 @@ class Basics extends WordSpec
                 gasPrice = gp,
                 gasLimit = Fees.Transaction,
                 nonce = n,
-                data = none
+                input = none
               )
               _ <- web3jz.submit(tx)
               b <- web3jz.balance(a)

@@ -7,6 +7,8 @@ GANACHE=ganache-cli\
 			--port=$(GANACHE_PORT) \
 			--host=$(GANACHE_HOST)
 
+export CONTRACT_BUILD_PATH=$(shell pwd)/src/build
+
 ganache:
 	$(GANACHE)
 
