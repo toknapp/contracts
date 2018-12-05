@@ -8,17 +8,30 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       library.dryWeb3jz % Test,
       library.scalaTest % Test,
+      library.scalaCheck % Test,
+      library.dryTest % Test,
+      library.dryCrypto,
+      library.dryEssentials,
+      library.dryCryptoTest % Test,
+      library.dryEssentialsTest % Test,
     )
   )
 
 lazy val library = new {
   object Version {
     val scalaTest = "3.0.5"
+    val scalaCheck = "1.13.5"
     val dry = "0.19.0-web3jz-SNAPSHOT"
   }
 
   val scalaTest = "org.scalatest" %% "scalatest" % Version.scalaTest
+  val scalaCheck = "org.scalacheck" %% "scalacheck" % Version.scalaCheck
   val dryWeb3jz = "co.upvest" %% "dry-web3jz" % Version.dry
+  val dryCrypto = "co.upvest" %% "dry-cryptoadt" % Version.dry
+  val dryCryptoTest = "co.upvest" %% "dry-cryptoadt" % Version.dry classifier "tests"
+  val dryEssentials = "co.upvest" %% "dry-essentials" % Version.dry
+  val dryEssentialsTest = "co.upvest" %% "dry-essentials" % Version.dry classifier "tests"
+  val dryTest = "co.upvest" %% "dry-test" % Version.dry
 }
 
 // *****************************************************************************
