@@ -2,20 +2,33 @@ package co.upvest.contracts
 
 import co.upvest.dry.essentials.bytes._
 import co.upvest.dry.cryptoadt.secp256k1
-import co.upvest.dry.cryptoadt.ethereum.ChainId
-import co.upvest.dry.web3jz.{Web3jz, Config}
+import co.upvest.dry.cryptoadt.ethereum.{ChainId, Wallet, Address, Wei}
+import co.upvest.dry.cryptoadt.ArbitraryInstances
+import co.upvest.dry.web3jz.Web3jz
 import co.upvest.dry.catz.syntax._
+
+import org.scalacheck.{Arbitrary, Gen}
 
 import cats.syntax.flatMap._
 import cats.instances.try_._
 import cats.instances.list._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Await}
+import scala.concurrent.duration.Duration
 import scala.util.Success
 
 object TestUtils {
+
+  case class Faucet(w: Wallet)
+
+  object Faucet {
+    implicit def cast1(f: Faucet): Wallet = f.w
+    implicit def cast2(f: Faucet): Address = f.w.address
+    implicit val arbitrary: Arbitrary[Faucet] = Arbitrary(Gen.oneOf(faucets))
+  }
+
   // mnemonic: text fall reveal replace bonus combine swap goat air bonus submit repair
-  val pks: List[secp256k1.PrivateKey] = List(
+  val faucets: List[Faucet] = List(
     "e2ee547be17ac9f7777d4763c43fd726c0a2a6d40450c92de942d7925d620b6d",
     "0740fb09781e8fa771edcf1bddee93ad6772593b3139f1cf36b0d095d235887b",
     "ac72e464dac0448a28fa71b34bfe46b2356fe09bd4f5a73519ee60b3b92b9dab",
@@ -26,12 +39,21 @@ object TestUtils {
     "4ad882b7e0b24fd01ad6d2f281d469edb9d2bef2c2ee8871099c5fd7c7018317",
     "9042fc069b6abe8210d31195b382b61c3ee9149223fcb181016a49ba61a14d84",
     "bf32730f2b240c0c482126ecc1e2219554f3c738f19bd592e3ccf4cc005ddc1e"
-  ) >>| { _.hex >>= secp256k1.PrivateKey.bigEndian } >>| { _.get  }
+  ) >>| { _.hex >>= secp256k1.PrivateKey.bigEndian } >>|
+    { _.get  } >>| Wallet.apply >>| Faucet.apply
 
   val Success(web3jz) = Web3jz(
-    Config(
+    Web3jz.Config(
       target = sys.env("GANACHE_TARGET"),
       chainId = ChainId(1337.toByte)
     )
   )(ExecutionContext.global)
+
+  object WeiRange extends ArbitraryInstances {
+    implicit val normal = Arbitrary(Gen.choose(Wei.One, Wei.ether))
+    implicit val tiny = Arbitrary(Gen.choose(Wei.One, Wei(1000000).get))
+  }
+
+  def accountIsEmpty(a: Address): Boolean =
+    Await.result(web3jz.balance(a), Duration.Inf) == Wei.Zero
 }
