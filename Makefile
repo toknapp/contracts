@@ -12,7 +12,10 @@ export CONTRACT_BUILD_PATH=$(shell pwd)/src/build
 ganache:
 	$(GANACHE)
 
+debug:
+	$(GANACHE) --verbose --debug
+
 sbt:
 	cd scala && sbt
 
-.PHONY: ganache sbt
+.PHONY: ganache sbt debug

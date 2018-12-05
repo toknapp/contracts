@@ -4,6 +4,7 @@ import org.scalatest.{WordSpec, Matchers}
 import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 
+import co.upvest.dry.essentials._
 import co.upvest.dry.cryptoadt.ethereum.{Address, Wei}
 import co.upvest.dry.catz.syntax._
 import co.upvest.dry.test.ArbitraryUtils
@@ -40,7 +41,8 @@ class Basics extends WordSpec
             value = Wei.Zero,
             gasPrice = gp,
             gasLimit =
-              Fees.TxCreate + Fees.Transaction + Fees.codeDeposit(data),
+              Fees.TxCreate + Fees.Transaction + Fees.codeDeposit(data) +
+                NonNegativeBigInt(6500).get, // TODO: would it be possible to get an exact value here?
             nonce = n,
             data
           )
