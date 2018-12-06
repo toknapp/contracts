@@ -11,15 +11,31 @@ contract Forward {
 
     function forward(
         uint8 v, bytes32 r, bytes32 s,
-        address target, uint256 value, bytes i
+        address target, uint256 value, bytes input
     ) public payable returns (bool) {
-        bytes memory sd = new bytes(32+32+32+32+i.length);
+        require(
+            ecrecover(signingData(target, value, input), v, r, s) == owner,
+            "invalid signature"
+        );
+
+        nonce += 1;
+
+        // TODO: handle output data? maybe annoying to do in solidity
+        return target.call.value(value)(input);
+    }
+
+    function signingData(
+        address target,
+        uint256 value,
+        bytes input
+    ) public view returns (bytes32) {
+        bytes memory sd = new bytes(32+32+32+32+input.length);
         uint sd_;
         uint i_;
         address a = this;
         assembly {
             sd_ := add(sd, 32)
-            i_ := add(i, 32)
+            i_ := add(input, 32)
 
             mstore(sd_, a)
             sd_ := add(sd_, 32)
@@ -33,14 +49,9 @@ contract Forward {
             mstore(sd_, nonce_offset)
             sd_ := add(sd_, 32)
         }
-        memcpy(sd_, i_, i.length);
+        memcpy(sd_, i_, input.length);
 
-        require(ecrecover(keccak256(sd), v, r, s) == owner, "invalid signature");
-
-        nonce += 1;
-
-        // TODO: handle output data? maybe annoying to do in solidity
-        return target.call.value(value)(i);
+        return keccak256(sd);
     }
 
     // https://github.com/Arachnid/solidity-stringutils/blob/3c63f18245645ba600cae2191deba7221512f753/src/strings.sol#L45
