@@ -1,12 +1,15 @@
 package co.upvest.contracts
 
 import co.upvest.dry.essentials._
+import co.upvest.dry.essentials.bytes._
 import co.upvest.dry.cryptoadt.{ArbitraryInstances, secp256k1}
 import co.upvest.dry.cryptoadt.ethereum.{Wei, Address, UInt256}
 import co.upvest.dry.test.ArbitraryUtils
 
 import org.scalatest.{WordSpec, Matchers}
 import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
+
+import cats.syntax.option._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -46,10 +49,10 @@ class ForwardSpec extends WordSpec
 
   "Forward" should {
     "enable an account to transfer ERC20 tokens without holding ether" in {
-      val k = pick[secp256k1.PrivateKey]
+      val owner = pick[secp256k1.PrivateKey]
       whenReady(
         for {
-          f <- freshForward(k.publicKey)
+          f <- freshForward(owner.publicKey)
           c <- freshTokenHolder(f.contract)
           e0 <- web3jz.balance(f.contract)
           a = pick[Address]
@@ -57,7 +60,7 @@ class ForwardSpec extends WordSpec
           amount = ERC20.Token(c, UInt256(10))
           _ <- f.forward(web3jz)(
             originator = pick[Faucet],
-            owner = k,
+            owner = owner,
             c.contract,
             Wei.Zero,
             ERC20.input.transfer(a, amount)
@@ -72,11 +75,11 @@ class ForwardSpec extends WordSpec
     }
 
     "only allow the authorized key to forward calls" in {
-      val k = pick[secp256k1.PrivateKey]
+      val owner = pick[secp256k1.PrivateKey]
       val adversary = pick[secp256k1.PrivateKey]
       whenReady(
         for {
-          f <- freshForward(k.publicKey)
+          f <- freshForward(owner.publicKey)
           c <- freshTokenHolder(f.contract)
           a = pick[Address]
           amount = ERC20.Token(c, UInt256(10))
@@ -90,6 +93,47 @@ class ForwardSpec extends WordSpec
             case t: RuntimeException if t.toString contains "invalid signature" =>
           }
           b <- c.balance(web3jz)(a)
+        } yield (c, b)
+      ) { case (c, b) =>
+        b shouldBe ERC20.Token(c, UInt256(0))
+      }
+    }
+
+    "not allow modifying the input" in {
+      val owner = pick[secp256k1.PrivateKey]
+      val adversary = pick[Address]
+      whenReady(
+        for {
+          f <- freshForward(owner.publicKey)
+          c <- freshTokenHolder(f.contract)
+          intendedBeneficiary = pick[Address]
+          amount = ERC20.Token(c, UInt256(10))
+          i = Forward.input.forward(
+            owner = owner,
+            c.contract,
+            Wei.Zero,
+            ERC20.input.transfer(intendedBeneficiary, amount)
+          )
+
+          modified = i.hex.replace(
+            intendedBeneficiary.toUnprefixedString,
+            adversary.toUnprefixedString
+          ).hex.get
+
+          originator = pick[Faucet]
+          gp <- web3jz.gasPrice()
+          n <- web3jz.nonce(originator)
+          tx = web3jz.sign(
+            originator,
+            to = f.contract,
+            Wei.Zero,
+            gp,
+            gasLimit = NonNegativeBigInt(100000).get, // TODO: make configurable
+            nonce = n,
+            input = modified.some
+          )
+          _ <- web3jz.submit(tx)
+          b <- c.balance(web3jz)(adversary)
         } yield (c, b)
       ) { case (c, b) =>
         b shouldBe ERC20.Token(c, UInt256(0))
