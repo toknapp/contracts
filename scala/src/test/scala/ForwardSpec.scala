@@ -132,7 +132,9 @@ class ForwardSpec extends WordSpec
             nonce = n,
             input = modified.some
           )
-          _ <- web3jz.submit(tx)
+          _ <- web3jz.submit(tx) recover {
+            case t: RuntimeException if t.toString contains "invalid signature" =>
+          }
           b <- c.balance(web3jz)(adversary)
         } yield (c, b)
       ) { case (c, b) =>

@@ -15,7 +15,7 @@ contract Forward {
         //bytes memory sd = new bytes(20+32+i.length);
         //assembly { mstore(add(sd, 32), target) }
 
-        require(ecrecover(keccak256("foo"), v, r, s) == owner, "invalid signature");
+        require(ecrecover(keccak256(i), v, r, s) == owner, "invalid signature");
 
         // TODO: verify signature
         // TODO: verify nonce (maybe include tx originator and tx nonce in the signature?)

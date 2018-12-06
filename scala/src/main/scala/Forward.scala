@@ -40,7 +40,7 @@ object Forward {
       owner: secp256k1.PrivateKey,
       target: Address, value: Wei, input: Bytes
     ): Bytes = {
-      val sig = sign(owner, "foo".getBytes)
+      val sig = sign(owner, input)
       functionSelector("forward(uint8,bytes32,bytes32,address,uint256,bytes)") ++
         Arg.encode((sig.v, sig.r, sig.s, target, value, input))
     }
