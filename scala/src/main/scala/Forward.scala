@@ -3,7 +3,7 @@ package co.upvest.contracts
 import co.upvest.dry.essentials._
 import co.upvest.dry.cryptoadt.secp256k1
 import co.upvest.dry.cryptoadt.ethereum.{Address, Wei, Wallet}
-import co.upvest.dry.web3jz.Web3jz
+import co.upvest.dry.web3jz.{Web3jz, sign}
 import co.upvest.dry.web3jz.abi.{Arg, functionSelector}
 
 import cats.syntax.option._
@@ -28,19 +28,26 @@ case class Forward(contract: Address) {
       gasPrice = gp,
       gasLimit = NonNegativeBigInt(100000).get, // TODO: make configurable
       nonce = n,
-      input = Forward.input.forward(target, value, input).some
+      input = Forward.input.forward(owner, target, value, input).some
     )
     _ <- web3jz.submit(tx)
   } yield ()
-
-
-    Future successful true
 }
 
 object Forward {
   object input {
-    def forward(target: Address, value: Wei, input: Bytes): Bytes =
-      functionSelector("forward(address,uint256,bytes)") ++
-        Arg.encode((target, value, input))
+    def forward(
+      key: secp256k1.PrivateKey,
+      target: Address, value: Wei, input: Bytes
+    ): Bytes = {
+      val sig = sign(key, "foo".getBytes)
+      functionSelector("forward(uint8,bytes32,bytes32,address,uint256,bytes)") ++
+        Arg.encode((sig.v, sig.r, sig.s, target, value, input))
+    }
+  }
+
+  object data {
+    def constructor(code: Bytes, owner: secp256k1.PublicKey): Bytes =
+      code ++ Arg.encode(Address.from(owner))
   }
 }

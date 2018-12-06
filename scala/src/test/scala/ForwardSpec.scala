@@ -27,7 +27,10 @@ class ForwardSpec extends WordSpec
       gasPrice = gp,
       gasLimit = NonNegativeBigInt(3000000).get,
       nonce = n,
-      loadContractBinary("Forward")
+      data = Forward.data.constructor(
+        loadContractBinary("Forward"),
+        pk
+      )
     )
     _ <- web3jz.submit(tx)
   } yield Forward(a)
@@ -83,11 +86,13 @@ class ForwardSpec extends WordSpec
             c.contract,
             Wei.Zero,
             ERC20.input.transfer(a, amount)
-          )
+          ) recover {
+            case t: RuntimeException if t.toString contains "invalid signature" =>
+          }
           b <- c.balance(web3jz)(a)
-        } yield b
-      ) { case b =>
-        b shouldBe Wei.Zero
+        } yield (c, b)
+      ) { case (c, b) =>
+        b shouldBe ERC20.Token(c, UInt256(0))
       }
     }
   }
