@@ -105,6 +105,46 @@ class ForwardSpec extends WordSpec
       }
     }
 
+    "be able to send ether" in {
+      val amount = pick[Wei](WeiRange.normal)
+      val owner = pick[secp256k1.PrivateKey]
+      whenReady(
+        for {
+          f <- freshForward(owner.publicKey)
+
+          faucet = pick[Faucet]
+          gp <- web3jz.gasPrice()
+          n <- web3jz.nonce(faucet)
+          _ <- web3jz.submit(
+            web3jz.sign(
+              faucet,
+              to = f.contract,
+              value = amount,
+              gasPrice = gp,
+              gasLimit = Fees.Transaction + NonNegativeBigInt(7000).get,
+              nonce = n,
+              input = none
+            )
+          )
+
+          beneficiary = pick[Address]
+          _ <- f.forward(web3jz)(
+            originator = pick[Faucet],
+            owner = owner,
+            beneficiary,
+            amount,
+            Array.empty
+          )
+
+          fb <- web3jz.balance(f.contract)
+          bb <- web3jz.balance(beneficiary)
+        } yield (fb, bb)
+      ) { case (fb, bb) =>
+        fb shouldBe Wei.Zero
+        bb shouldBe amount
+      }
+    }
+
     "only allow the authorized key to forward calls" in {
       val owner = pick[secp256k1.PrivateKey]
       val adversary = pick[secp256k1.PrivateKey]
