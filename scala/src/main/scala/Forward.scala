@@ -1,6 +1,7 @@
 package co.upvest.contracts
 
 import co.upvest.dry.essentials._
+import co.upvest.dry.cryptoadt.secp256k1
 import co.upvest.dry.cryptoadt.ethereum.{Address, Wei, Wallet}
 import co.upvest.dry.web3jz.Web3jz
 import co.upvest.dry.web3jz.abi.{Arg, functionSelector}
@@ -13,6 +14,7 @@ case class Forward(contract: Address) {
 
   def forward(web3jz: Web3jz)(
     originator: Wallet,
+    owner: secp256k1.PrivateKey,
     target: Address,
     value: Wei,
     input: Bytes

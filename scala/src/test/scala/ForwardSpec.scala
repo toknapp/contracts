@@ -1,7 +1,7 @@
 package co.upvest.contracts
 
 import co.upvest.dry.essentials._
-import co.upvest.dry.cryptoadt.ArbitraryInstances
+import co.upvest.dry.cryptoadt.{ArbitraryInstances, secp256k1}
 import co.upvest.dry.cryptoadt.ethereum.{Wei, Address, UInt256}
 import co.upvest.dry.test.ArbitraryUtils
 
@@ -17,7 +17,7 @@ class ForwardSpec extends WordSpec
   with Matchers with ScalaFutures with ArbitraryUtils with IntegrationPatience
   with ArbitraryInstances {
 
-  def freshForward(): Future[Forward] = for {
+  def freshForward(pk: secp256k1.PublicKey): Future[Forward] = for {
     gp <- web3jz.gasPrice()
     w = pick[Faucet]
     n <- web3jz.nonce(w)
@@ -43,9 +43,10 @@ class ForwardSpec extends WordSpec
 
   "Forward" should {
     "enable an account to transfer ERC20 tokens without holding ether" in {
+      val k = pick[secp256k1.PrivateKey]
       whenReady(
         for {
-          f <- freshForward()
+          f <- freshForward(k.publicKey)
           c <- freshTokenHolder(f.contract)
           e0 <- web3jz.balance(f.contract)
           a = pick[Address]
@@ -53,6 +54,7 @@ class ForwardSpec extends WordSpec
           amount = ERC20.Token(c, UInt256(10))
           _ <- f.forward(web3jz)(
             originator = pick[Faucet],
+            owner = k,
             c.contract,
             Wei.Zero,
             ERC20.input.transfer(a, amount)
@@ -63,6 +65,29 @@ class ForwardSpec extends WordSpec
         e0 shouldBe Wei.Zero
         b0 shouldBe ERC20.Token(c, UInt256(0))
         b1 shouldBe amount
+      }
+    }
+
+    "only allow the authorized key to forward calls" in {
+      val k = pick[secp256k1.PrivateKey]
+      val adversary = pick[secp256k1.PrivateKey]
+      whenReady(
+        for {
+          f <- freshForward(k.publicKey)
+          c <- freshTokenHolder(f.contract)
+          a = pick[Address]
+          amount = ERC20.Token(c, UInt256(10))
+          _ <- f.forward(web3jz)(
+            originator = pick[Faucet],
+            owner = adversary,
+            c.contract,
+            Wei.Zero,
+            ERC20.input.transfer(a, amount)
+          )
+          b <- c.balance(web3jz)(a)
+        } yield b
+      ) { case b =>
+        b shouldBe Wei.Zero
       }
     }
   }
