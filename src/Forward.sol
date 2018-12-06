@@ -75,4 +75,6 @@ contract Forward {
     }
 
     function getNonce() public view returns (uint256) { return nonce; }
+
+    function() public payable { }
 }

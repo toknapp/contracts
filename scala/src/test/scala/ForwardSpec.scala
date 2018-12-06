@@ -5,6 +5,7 @@ import co.upvest.dry.essentials.bytes._
 import co.upvest.dry.cryptoadt.{ArbitraryInstances, secp256k1}
 import co.upvest.dry.cryptoadt.ethereum.{Wei, Address, UInt256}
 import co.upvest.dry.test.ArbitraryUtils
+import co.upvest.dry.web3jz.Fees
 
 import org.scalatest.{WordSpec, Matchers}
 import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
@@ -14,7 +15,7 @@ import cats.syntax.option._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import TestUtils.{web3jz, Faucet, freshCoin, loadContractBinary}
+import TestUtils.{web3jz, Faucet, freshCoin, loadContractBinary, WeiRange}
 
 class ForwardSpec extends WordSpec
   with Matchers with ScalaFutures with ArbitraryUtils with IntegrationPatience
@@ -70,6 +71,36 @@ class ForwardSpec extends WordSpec
       ) { case (c, e0, b0, amount, b1) =>
         e0 shouldBe Wei.Zero
         b0 shouldBe ERC20.Token(c, UInt256(0))
+        b1 shouldBe amount
+      }
+    }
+
+    "be able to receive ether" in {
+      val amount = pick[Wei](WeiRange.normal)
+      val owner = pick[secp256k1.PrivateKey]
+      whenReady(
+        for {
+          f <- freshForward(owner.publicKey)
+          b0 <- web3jz.balance(f.contract)
+
+          faucet = pick[Faucet]
+          gp <- web3jz.gasPrice()
+          n <- web3jz.nonce(faucet)
+          tx = web3jz.sign(
+            faucet,
+            to = f.contract,
+            value = amount,
+            gasPrice = gp,
+            gasLimit = Fees.Transaction + NonNegativeBigInt(7000).get,
+            nonce = n,
+            input = none
+          )
+          _ <- web3jz.submit(tx)
+
+          b1 <- web3jz.balance(f.contract)
+        } yield (b0, b1)
+      ) { case (b0, b1) =>
+        b0 shouldBe Wei.Zero
         b1 shouldBe amount
       }
     }
