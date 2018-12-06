@@ -108,8 +108,10 @@ class ForwardSpec extends WordSpec
           c <- freshTokenHolder(f.contract)
           intendedBeneficiary = pick[Address]
           amount = ERC20.Token(c, UInt256(10))
-          i = Forward.input.forward(
+          nn <- f.nonce(web3jz)
+          i = f.input.forward(
             owner = owner,
+            nonce = nn,
             c.contract,
             Wei.Zero,
             ERC20.input.transfer(intendedBeneficiary, amount)
@@ -128,7 +130,7 @@ class ForwardSpec extends WordSpec
             to = f.contract,
             Wei.Zero,
             gp,
-            gasLimit = NonNegativeBigInt(100000).get, // TODO: make configurable
+            gasLimit = NonNegativeBigInt(100000).get,
             nonce = n,
             input = modified.some
           )

@@ -2,25 +2,66 @@ pragma solidity ^0.4.24;
 
 contract Forward {
     address owner;
+    uint256 nonce;
 
     constructor(address _owner) public {
         owner = _owner;
+        nonce = 0;
     }
 
-    // TODO: value can be arbitrarily large?
     function forward(
         uint8 v, bytes32 r, bytes32 s,
         address target, uint256 value, bytes i
     ) public payable returns (bool) {
-        //bytes memory sd = new bytes(20+32+i.length);
-        //assembly { mstore(add(sd, 32), target) }
+        bytes memory sd = new bytes(32+32+32+32+i.length);
+        uint sd_;
+        uint i_;
+        address a = this;
+        assembly {
+            sd_ := add(sd, 32)
+            i_ := add(i, 32)
 
-        require(ecrecover(keccak256(i), v, r, s) == owner, "invalid signature");
+            mstore(sd_, a)
+            sd_ := add(sd_, 32)
 
-        // TODO: verify signature
-        // TODO: verify nonce (maybe include tx originator and tx nonce in the signature?)
-        // TODO: increase nonce (then this would be unnecessary, and there's no need to have a separate call to get the nonce)
+            mstore(sd_, target)
+            sd_ := add(sd_, 32)
+
+            mstore(sd_, value)
+            sd_ := add(sd_, 32)
+
+            mstore(sd_, nonce_offset)
+            sd_ := add(sd_, 32)
+        }
+        memcpy(sd_, i_, i.length);
+
+        require(ecrecover(keccak256(sd), v, r, s) == owner, "invalid signature");
+
+        nonce += 1;
+
         // TODO: handle output data? maybe annoying to do in solidity
         return target.call.value(value)(i);
     }
+
+    // https://github.com/Arachnid/solidity-stringutils/blob/3c63f18245645ba600cae2191deba7221512f753/src/strings.sol#L45
+    function memcpy(uint dest, uint src, uint len) private pure {
+        // Copy word-length chunks while possible
+        for(; len >= 32; len -= 32) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+            dest += 32;
+            src += 32;
+        }
+
+        // Copy remaining bytes
+        uint mask = 256 ** (32 - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask))
+            let destpart := and(mload(dest), mask)
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
+
+    function getNonce() public view returns (uint256) { return nonce; }
 }
