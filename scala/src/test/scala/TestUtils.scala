@@ -14,7 +14,7 @@ import cats.syntax.flatMap._
 import cats.instances.try_._
 import cats.instances.list._
 
-import scala.concurrent.{ExecutionContext, Await}
+import scala.concurrent.{Future, ExecutionContext, Await}
 import scala.concurrent.duration.Duration
 import scala.util.Success
 
@@ -55,10 +55,27 @@ object TestUtils {
     implicit val tiny = Arbitrary(Gen.choose(Wei.One, Wei(1000000).get))
   }
 
-  def accountIsEmpty(a: Address): Boolean =
-    Await.result(web3jz.balance(a), Duration.Inf) == Wei.Zero
+  def accountIsEmpty(a: Address): Boolean = web3jz.balance(a).force == Wei.Zero
 
   def loadContractBinary(contract: String): Bytes = scala.io.Source.fromFile(
     s"${sys.env("CONTRACT_BUILD_PATH")}/$contract.bin"
   ).mkString.hex.get
+
+  def freshCoin(w: Wallet)(implicit ec: ExecutionContext): Future[ERC20] = for {
+    gp <- web3jz.gasPrice()
+    n <- web3jz.nonce(w)
+    (tx, a) = web3jz.contract(
+      w,
+      value = Wei.Zero,
+      gasPrice = gp,
+      gasLimit = NonNegativeBigInt(2000000).get,
+      nonce = n,
+      loadContractBinary("Coin")
+    )
+    _ <- web3jz.submit(tx)
+  } yield ERC20(a)
+
+  implicit class force[A](fa: Future[A]) {
+    def force: A = Await.result(fa, Duration.Inf)
+  }
 }

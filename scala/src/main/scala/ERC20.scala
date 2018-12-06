@@ -41,25 +41,25 @@ case class ERC20(contract: Address) {
       to = contract,
       value = Wei.Zero,
       gasPrice = gp,
-      gasLimit = NonNegativeBigInt(51241).get, // TODO: make configurable
+      gasLimit = NonNegativeBigInt(100000).get, // TODO: make configurable
       nonce = n,
       input = input.transfer(to, amount).some
     )
     _ <- web3jz.submit(tx)
   } yield ()
+}
+
+object ERC20 {
+  case class Token(contract: ERC20, amount: UInt256)
 
   object input {
     def balance(of: Address): Bytes =
-      functionSelector("balanceOf(address)") ++ Arg(of)
+      functionSelector("balanceOf(address)") ++ Arg.encode(of)
 
     val totalSupply: Bytes = functionSelector("totalSupply()")
 
     def transfer(to: Address, amount: Token): Bytes =
       functionSelector("transfer(address,uint256)") ++
-        Arg((to, amount.amount))
+        Arg.encode((to, amount.amount))
   }
-}
-
-object ERC20 {
-  case class Token(contract: ERC20, amount: UInt256)
 }

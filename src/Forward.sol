@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 contract Forward {
+    // TODO: value can be arbitrarily large?
     function forward(address target, uint256 v, bytes i)
         public payable returns (bool) {
             // TODO: verify signature

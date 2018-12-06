@@ -6,30 +6,15 @@ import org.scalatest.concurrent.{ScalaFutures, IntegrationPatience}
 import co.upvest.dry.essentials._
 import co.upvest.dry.test.ArbitraryUtils
 import co.upvest.dry.cryptoadt.ArbitraryInstances
-import co.upvest.dry.cryptoadt.ethereum.{Wei, Wallet, Address, UInt256}
+import co.upvest.dry.cryptoadt.ethereum.{Address, UInt256}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import TestUtils.{loadContractBinary, web3jz, Faucet}
+import TestUtils.{web3jz, Faucet, freshCoin}
 
 class ERC20Spec extends WordSpec
   with Matchers with ScalaFutures with ArbitraryUtils with IntegrationPatience
   with ArbitraryInstances {
-
-  def freshCoin(w: Wallet): Future[ERC20] = for {
-    gp <- web3jz.gasPrice()
-    n <- web3jz.nonce(w)
-    (tx, a) = web3jz.contract(
-      w,
-      value = Wei.Zero,
-      gasPrice = gp,
-      gasLimit = NonNegativeBigInt(2000000).get,
-      nonce = n,
-      loadContractBinary("Coin")
-    )
-    _ <- web3jz.submit(tx)
-  } yield ERC20(a)
 
   "ERC20" should {
     "deploy contract and receive the total supply" in {
