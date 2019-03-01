@@ -13,7 +13,10 @@ ganache:
 	$(GANACHE)
 
 test:
-	$(MAKE) -C python
+	$(MAKE) -C python run
+
+repl:
+	$(MAKE) -C python repl
 
 debug:
 	$(GANACHE) --verbose --debug
@@ -21,4 +24,4 @@ debug:
 sbt:
 	cd scala && sbt
 
-.PHONY: ganache sbt debug test
+.PHONY: ganache sbt debug test repl

@@ -12,5 +12,9 @@ class SanityCheck(unittest.TestCase):
             b = w3.eth.getBalance(f)
             self.assertGreater(b, 0)
 
+    def test_faucets_present_in_rpc(self):
+        for i, f in faucet_addresses:
+            self.assertEqual(f, w3.eth.accounts[i])
+
 if __name__ == '__main__':
     unittest.main()
