@@ -1,6 +1,8 @@
 from web3 import Web3, HTTPProvider, TestRPCProvider
 from eth_keys import keys
+
 from binascii import unhexlify
+from glob import glob
 import os
 
 target = os.getenv("GANACHE_TARGET")
@@ -20,3 +22,9 @@ faucets = map(lambda f: unhexlify(f), [
 ])
 
 faucet_addresses = map(lambda f: keys.PrivateKey(f).public_key.to_checksum_address(), faucets)
+
+contract_sources = {}
+for contract in glob(os.path.join(os.getenv("CONTRACT_BUILD_PATH"), "*.bin")):
+    name = os.path.basename(contract)[:-4]
+    with open(contract, "rb") as h:
+        contract_sources[name] = unhexlify(h.read())
