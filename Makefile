@@ -1,6 +1,6 @@
 MNEMONIC="text fall reveal replace bonus combine swap goat air bonus submit repair"
 GANACHE_PORT=9431
-GANACHE_HOST=0.0.0.0
+GANACHE_HOST=127.0.0.1
 export GANACHE_TARGET=http://$(GANACHE_HOST):$(GANACHE_PORT)
 GANACHE=ganache-cli\
 			--mnemonic=$(MNEMONIC) \
@@ -12,10 +12,13 @@ export CONTRACT_BUILD_PATH=$(shell pwd)/src/build
 ganache:
 	$(GANACHE)
 
+test:
+	$(MAKE) -C python
+
 debug:
 	$(GANACHE) --verbose --debug
 
 sbt:
 	cd scala && sbt
 
-.PHONY: ganache sbt debug
+.PHONY: ganache sbt debug test
