@@ -10,6 +10,11 @@ import random
 target = os.getenv("GANACHE_TARGET")
 w3 = Web3(HTTPProvider(target))
 
+def address(pk):
+    if not isinstance(pk, keys.PrivateKey):
+        pk = keys.PrivateKey(pk)
+    return pk.public_key.to_checksum_address()
+
 class Faucets:
     def __init__(self):
         self.keys = map(lambda f: unhexlify(f), [
@@ -25,10 +30,7 @@ class Faucets:
             "bf32730f2b240c0c482126ecc1e2219554f3c738f19bd592e3ccf4cc005ddc1e",
         ])
 
-        self.addresses = list(map(
-            lambda f: keys.PrivateKey(f).public_key.to_checksum_address(),
-            self.keys
-        ))
+        self.addresses = list(map(address, self.keys))
 
     def random(self):
         return random.choice(self.addresses)

@@ -3,7 +3,7 @@
 import unittest
 import random
 
-from test_settings import faucets, w3, deploy, contracts
+from test_settings import *
 import fresh
 
 class BasicSanityChecks(unittest.TestCase):
@@ -21,13 +21,13 @@ class BasicSanityChecks(unittest.TestCase):
 
     def test_fresh_private_key(self):
         pk = fresh.private_key()
-        b = w3.eth.getBalance(pk.public_key.to_checksum_address())
+        b = w3.eth.getBalance(address(pk))
         self.assertEqual(b, 0)
 
     def test_fresh_private_key_with_balance(self):
         w = w3.toWei(random.randint(1, 1000), 'gwei')
         pk = fresh.private_key(balance = w)
-        b = w3.eth.getBalance(pk.public_key.to_checksum_address())
+        b = w3.eth.getBalance(address(pk))
         self.assertEqual(b, w)
 
 class ContractSanityChecks(unittest.TestCase):
@@ -50,6 +50,22 @@ class ERC20SanityChecks(unittest.TestCase):
         b = contract.functions.balanceOf(f).call()
         tb = contract.functions.totalSupply().call()
         self.assertEqual(b, tb)
+
+    def test_fresh_address_has_no_tokens(self):
+        contract = deploy(contracts['Coin'])
+        pk = fresh.private_key()
+        b = contract.functions.balanceOf(address(pk)).call()
+        self.assertEqual(b, 0)
+
+    def test_transfer(self):
+        f = faucets.random()
+        contract = deploy(contracts['Coin'], faucet = f)
+        pk = fresh.private_key()
+        v = random.randint(0, 1000)
+        tx = contract.functions.transfer(address(pk), v).transact({ 'from': f })
+        w3.eth.waitForTransactionReceipt(tx)
+        b = contract.functions.balanceOf(address(pk)).call()
+        self.assertEqual(b, v)
 
 if __name__ == '__main__':
     unittest.main()
