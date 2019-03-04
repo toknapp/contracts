@@ -8,9 +8,6 @@ export PYTEST = $(VENV)/bin/pytest
 run: deps
 	$(PYTEST) -v --disable-warnings .
 
-repl:
-	$(PYTHON) -i test_settings.py
-
 deps: .requirements.flag
 test-deps: deps .requirements.test.flag
 

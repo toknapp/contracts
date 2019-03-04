@@ -55,11 +55,13 @@ class UseCaseTests(unittest.TestCase):
 
         # pick a beneficiary
         beneficiary = address(fresh.private_key())
+
+        # check the initial balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # send all ether
-        tx = self.fwd.transact(
+        self.fwd.transact(
             private_key = self.pk,
             target = beneficiary,
             value = v,
@@ -69,13 +71,35 @@ class UseCaseTests(unittest.TestCase):
         # check that the nonce got bumped
         self.assertEqual(self.fwd.nonce(), 1)
 
-        # check the updated balances
+        # check the final balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
         self.assertEqual(w3.eth.getBalance(beneficiary), v)
 
-    @unittest.skip('not implemented')
     def test_transfer_erc20(self):
-        self.fail()
+        # provision a coin and some tokens
+        f = faucets.random()
+        contract = deploy(contracts['Coin'], faucet = f)
+        v = random.randint(0, 1000)
+        contract.functions.transfer(self.fwd.address, v).transact({ 'from': f })
+
+        # pick a beneficiary
+        beneficiary = address(fresh.private_key())
+
+        # check the initial balances
+        self.assertEqual(contract.functions.balanceOf(self.fwd.address).call(), v)
+        self.assertEqual(contract.functions.balanceOf(beneficiary).call(), 0)
+
+        # send all ether
+        self.fwd.transact(
+            private_key = self.pk,
+            data = contract.functions.transfer(beneficiary, v),
+            originator = faucets.random()
+        )
+
+        # check the final balances
+        self.assertEqual(contract.functions.balanceOf(self.fwd.address).call(), 0)
+        self.assertEqual(contract.functions.balanceOf(beneficiary).call(), v)
+
 
     @unittest.skip('not implemented')
     def test_return_value(self):

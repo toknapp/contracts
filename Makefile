@@ -22,7 +22,7 @@ test: contracts
 	$(MAKE) -C pycontracts run
 
 repl: contracts
-	$(MAKE) -C python repl
+	PYTHONPATH=.:$PYTHONPATH python -i pycontracts/tests/test_settings.py
 
 sbt:
 	cd scala && sbt
