@@ -23,9 +23,26 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(self.fwd.nonce(), 0)
 
 class UseCaseTests(unittest.TestCase):
-    @unittest.skip('not implemented')
+    def setUp(self):
+        self.pk = fresh.private_key()
+        self.fwd = forward.deploy(
+            w3,
+            owner = address(self.pk),
+            originator = faucets.random()
+        )
+
     def test_receive_ether(self):
-        self.fail()
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
+
+        v = random.randint(0, 1000000000)
+        tx = w3.eth.sendTransaction({
+            "from": faucets.random(),
+            "to": self.fwd.address,
+            "value": v,
+            "gas": 90000,
+        })
+
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
 
     @unittest.skip('not implemented')
     def test_send_ether(self):

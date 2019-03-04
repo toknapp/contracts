@@ -14,6 +14,5 @@ def private_key(balance = None):
                 "value": balance
             }
         )
-        w3.eth.waitForTransactionReceipt(tx)
 
     return pk

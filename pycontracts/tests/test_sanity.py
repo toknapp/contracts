@@ -41,7 +41,6 @@ class ContractSanityChecks(unittest.TestCase):
         contract = deploy(contracts['State'])
         i = random.randint(0, 1000)
         tx = contract.functions.set(i).transact({'from': faucets.random()})
-        w3.eth.waitForTransactionReceipt(tx)
         self.assertEqual(contract.get_function_by_signature('get()')().call(), i)
 
 class ERC20SanityChecks(unittest.TestCase):
@@ -64,7 +63,6 @@ class ERC20SanityChecks(unittest.TestCase):
         pk = fresh.private_key()
         v = random.randint(0, 1000)
         tx = contract.functions.transfer(address(pk), v).transact({ 'from': f })
-        w3.eth.waitForTransactionReceipt(tx)
         b = contract.functions.balanceOf(address(pk)).call()
         self.assertEqual(b, v)
 
