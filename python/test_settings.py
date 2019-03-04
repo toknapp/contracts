@@ -46,9 +46,9 @@ for contract in glob(os.path.join(os.getenv("CONTRACT_BUILD_PATH"), "*.bin")):
         with open(abi, "r") as h:
             contracts[name]['abi'] = h.read()
 
-def deploy(contract):
+def deploy(contract, faucet = None):
     tx_hash = w3.eth.sendTransaction({
-        'from': faucets.random(),
+        'from': faucet or faucets.random(),
         'data': contract['code']
     })
     r = w3.eth.waitForTransactionReceipt(tx_hash)

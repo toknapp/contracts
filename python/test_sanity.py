@@ -4,7 +4,7 @@ import unittest
 import random
 from test_settings import faucets, w3, deploy, contracts
 
-class SanityCheck(unittest.TestCase):
+class BasicSanityChecks(unittest.TestCase):
     def test_blockNumber(self):
         w3.eth.blockNumber
 
@@ -17,6 +17,7 @@ class SanityCheck(unittest.TestCase):
         for i, f in enumerate(faucets.addresses):
             self.assertEqual(f, w3.eth.accounts[i])
 
+class ContractSanityChecks(unittest.TestCase):
     def test_echo_call(self):
         contract = deploy(contracts['Echo'])
         i = random.randint(0, 1000)
@@ -28,6 +29,14 @@ class SanityCheck(unittest.TestCase):
         tx = contract.functions.set(i).transact({'from': faucets.random()})
         w3.eth.waitForTransactionReceipt(tx)
         self.assertEqual(contract.get_function_by_signature('get()')().call(), i)
+
+class ERC20SanityChecks(unittest.TestCase):
+    def test_deployment(self):
+        f = faucets.random()
+        contract = deploy(contracts['Coin'], faucet = f)
+        b = contract.functions.balanceOf(f).call()
+        tb = contract.functions.totalSupply().call()
+        self.assertEqual(b, tb)
 
 if __name__ == '__main__':
     unittest.main()
