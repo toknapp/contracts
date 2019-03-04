@@ -3,8 +3,9 @@
 import unittest
 import random
 
-from test_settings import *
-import fresh
+from pycontracts.tests.test_settings import *
+from pycontracts.tests import fresh
+from pycontracts import contracts
 
 class BasicSanityChecks(unittest.TestCase):
     def test_blockNumber(self):

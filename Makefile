@@ -19,7 +19,7 @@ contracts:
 	$(MAKE) -C src
 
 test: contracts
-	$(MAKE) -C python run
+	$(MAKE) -C pycontracts run
 
 repl: contracts
 	$(MAKE) -C python repl

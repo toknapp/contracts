@@ -2,6 +2,8 @@ from web3 import Web3, HTTPProvider, TestRPCProvider
 from web3.contract import Contract
 from eth_keys import keys
 
+from pycontracts import contracts
+
 from binascii import unhexlify
 from glob import glob
 import os
@@ -36,17 +38,6 @@ class Faucets:
         return random.choice(self.addresses)
 
 faucets = Faucets()
-
-contracts = {}
-for contract in glob(os.path.join(os.getenv("CONTRACT_BUILD_PATH"), "*.bin")):
-    name = os.path.basename(contract)[:-4]
-    with open(contract, "rb") as h:
-        contracts[name] = { 'code': unhexlify(h.read()) }
-
-    abi = contract[:-4] + ".abi"
-    if os.path.isfile(abi):
-        with open(abi, "r") as h:
-            contracts[name]['abi'] = h.read()
 
 def deploy(contract, faucet = None):
     tx_hash = w3.eth.sendTransaction({

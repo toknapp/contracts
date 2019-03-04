@@ -6,7 +6,7 @@ export PIP = $(VENV)/bin/pip
 export PYTEST = $(VENV)/bin/pytest
 
 run: deps
-	$(PYTEST) -v --disable-warnings
+	$(PYTEST) -v --disable-warnings .
 
 repl:
 	$(PYTHON) -i test_settings.py
@@ -22,6 +22,6 @@ $(VENV):
 	$(HOST_PYTHON) -m venv $@
 
 clean:
-	rm -rf .*.flag $(VENV)
+	rm -rf .*.flag $(VENV) __pycache__
 
 .PHONY: run deps clean

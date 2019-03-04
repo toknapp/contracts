@@ -75,6 +75,7 @@ contract Forward {
     }
 
     function getNonce() public view returns (uint256) { return nonce; }
+    function getOwner() public view returns (address) { return owner; }
 
     function() public payable { }
 }

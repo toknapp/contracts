@@ -1,6 +1,6 @@
 import os
 
-from test_settings import faucets, w3, address
+from pycontracts.tests.test_settings import faucets, w3, address
 from eth_keys import keys
 
 def private_key(balance = None):
