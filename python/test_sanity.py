@@ -2,7 +2,9 @@
 
 import unittest
 import random
+
 from test_settings import faucets, w3, deploy, contracts
+import fresh
 
 class BasicSanityChecks(unittest.TestCase):
     def test_blockNumber(self):
@@ -16,6 +18,17 @@ class BasicSanityChecks(unittest.TestCase):
     def test_faucets_present_in_rpc(self):
         for i, f in enumerate(faucets.addresses):
             self.assertEqual(f, w3.eth.accounts[i])
+
+    def test_fresh_private_key(self):
+        pk = fresh.private_key()
+        b = w3.eth.getBalance(pk.public_key.to_checksum_address())
+        self.assertEqual(b, 0)
+
+    def test_fresh_private_key_with_balance(self):
+        w = w3.toWei(random.randint(1, 1000), 'gwei')
+        pk = fresh.private_key(balance = w)
+        b = w3.eth.getBalance(pk.public_key.to_checksum_address())
+        self.assertEqual(b, w)
 
 class ContractSanityChecks(unittest.TestCase):
     def test_echo_call(self):
