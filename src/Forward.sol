@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
 contract Forward {
-    address owner;
-    uint256 nonce;
+    address private owner;
+    uint256 private nonce;
 
     constructor(address _owner) public {
         owner = _owner;
@@ -14,8 +14,8 @@ contract Forward {
         address target, uint256 value, bytes input
     ) public payable returns (bool) {
         require(
-            ecrecover(signingData(target, value, input), v, r, s) == owner,
-            "invalid signature"
+            ecrecover(keccak256(signingData(target, value, input)), v, r, s) == owner,
+            "invalid signature lol"
         );
 
         nonce += 1;
@@ -28,7 +28,7 @@ contract Forward {
         address target,
         uint256 value,
         bytes input
-    ) public view returns (bytes32) {
+    ) public view returns (bytes) {
         bytes memory sd = new bytes(32+32+32+32+input.length);
         uint sd_;
         uint i_;
@@ -51,7 +51,7 @@ contract Forward {
         }
         memcpy(sd_, i_, input.length);
 
-        return keccak256(sd);
+        return sd;
     }
 
     // https://github.com/Arachnid/solidity-stringutils/blob/3c63f18245645ba600cae2191deba7221512f753/src/strings.sol#L45

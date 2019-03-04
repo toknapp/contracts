@@ -37,11 +37,18 @@ class ContractSanityChecks(unittest.TestCase):
         i = random.randint(0, 1000)
         self.assertEqual(contract.functions.echo(i).call(), i)
 
-    def test_state_transact(self):
+    def test_state_empty(self):
         contract = deploy(contracts['State'])
+        self.assertEqual(contract.functions.fetch().call(), 0)
+        self.assertEqual(contract.functions.fetch(fresh.address()).call(), 0)
+
+    def test_state_transact(self):
+        f = faucets.random()
+        contract = deploy(contracts['State'], faucet = f)
         i = random.randint(0, 1000)
-        contract.functions.set(i).transact({'from': faucets.random()})
-        self.assertEqual(contract.get_function_by_signature('get()')().call(), i)
+        contract.functions.set(i).transact({'from': f})
+        self.assertEqual(contract.functions.fetch().call({'from': f}), i)
+        self.assertEqual(contract.functions.fetch(f).call(), i)
 
 class ERC20SanityChecks(unittest.TestCase):
     def test_deployment(self):

@@ -54,7 +54,7 @@ class UseCaseTests(unittest.TestCase):
         })
 
         # pick a beneficiary
-        beneficiary = address(fresh.private_key())
+        beneficiary = fresh.address()
 
         # check the initial balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
@@ -75,6 +75,25 @@ class UseCaseTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
         self.assertEqual(w3.eth.getBalance(beneficiary), v)
 
+    def test_simple_contract_interaction(self):
+        contract = deploy(contracts['State'])
+
+        i = random.randint(0, 1000)
+
+        self.assertEqual(contract.functions.fetch(self.fwd.address).call(), 0)
+
+        f = faucets.random()
+        self.fwd.transact(
+            private_key = self.pk,
+            data = contract.functions.set(i),
+            originator = f
+        )
+
+        self.assertEqual(contract.functions.fetch(self.fwd.address).call(), i)
+        # TODO: when return values have been implemented:
+        # self.assertEqual(self.fwd.call(private_key = self.pk, data = contract.functions.fetch()), i)
+
+
     def test_transfer_erc20(self):
         # provision a coin and some tokens
         f = faucets.random()
@@ -83,7 +102,7 @@ class UseCaseTests(unittest.TestCase):
         contract.functions.transfer(self.fwd.address, v).transact({ 'from': f })
 
         # pick a beneficiary
-        beneficiary = address(fresh.private_key())
+        beneficiary = fresh.address()
 
         # check the initial balances
         self.assertEqual(contract.functions.balanceOf(self.fwd.address).call(), v)

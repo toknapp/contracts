@@ -44,24 +44,32 @@ class Forward:
             + nonce.to_bytes(32, 'big') \
             + data
 
-    def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
+    def _build(self, private_key, target, value, data, nonce):
         if hasattr(data, 'buildTransaction'):
-            t = data.buildTransaction({"nonce": 0, "gas": 0, "gasLimit": 0})
+            t = data.buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
             data = Web3.toBytes(hexstr = t['data'])
             if not target:
                 target = t['to']
+
+        if nonce is None:
+            nonce = self.nonce()
 
         sig = private_key.sign_msg(
             self.signing_data(
                 target = target,
                 value = value,
                 data = data,
-                nonce = nonce or self.nonce()
+                nonce = nonce,
             )
         )
+
         return self.contract.functions.forward(
             27 + sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big'),
             target, value, data
-        ).transact({
-            'from': originator
-        })
+        )
+
+    def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
+        return self._build(private_key, target, value, data, nonce).transact({ 'from': originator })
+
+    def call(self, private_key, target = None, value = 0, data = b'', nonce = None):
+        return self._build(private_key, target, value, data, nonce).call()
