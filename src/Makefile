@@ -1,6 +1,6 @@
 OUT=build
 
-all: $(OUT)/Coin.bin $(OUT)/Forward.bin $(OUT)/Echo.bin
+all: $(OUT)/Coin.bin $(OUT)/Forward.bin $(OUT)/Echo.bin $(OUT)/State.bin
 
 %: $(OUT)/%.bin
 

@@ -12,16 +12,19 @@ export CONTRACT_BUILD_PATH=$(shell pwd)/src/build
 ganache:
 	$(GANACHE)
 
-test:
-	$(MAKE) -C python run
-
-repl:
-	$(MAKE) -C python repl
-
 debug:
 	$(GANACHE) --verbose --debug
+
+contracts:
+	$(MAKE) -C src
+
+test: contracts
+	$(MAKE) -C python run
+
+repl: contracts
+	$(MAKE) -C python repl
 
 sbt:
 	cd scala && sbt
 
-.PHONY: ganache sbt debug test repl
+.PHONY: ganache sbt debug test repl contracts
