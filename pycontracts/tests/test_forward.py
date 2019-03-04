@@ -44,9 +44,34 @@ class UseCaseTests(unittest.TestCase):
 
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
 
-    @unittest.skip('not implemented')
     def test_send_ether(self):
-        self.fail()
+        # provision some eth
+        v = random.randint(1, 1000000000)
+        tx = w3.eth.sendTransaction({
+            "from": faucets.random(),
+            "to": self.fwd.address,
+            "value": v,
+        })
+
+        # pick a beneficiary
+        beneficiary = address(fresh.private_key())
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # send all ether
+        tx = self.fwd.transact(
+            private_key = self.pk,
+            target = beneficiary,
+            value = v,
+            originator = faucets.random()
+        )
+
+        # check that the nonce got bumped
+        self.assertEqual(self.fwd.nonce(), 1)
+
+        # check the updated balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
+        self.assertEqual(w3.eth.getBalance(beneficiary), v)
 
     @unittest.skip('not implemented')
     def test_transfer_erc20(self):
