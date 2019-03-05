@@ -16,12 +16,13 @@ intermediate contract talking to the ERC20 contracts (so that it will be the
 
 ### The code (the how)
 * [Solidity implementation](src/Forward.sol)
-* [Some tests](scala/src/test/scala/ForwardSpec.scala) (using `ganache-cli`, `web3j` and `ScalaTest`)
+* [Python abstraction](pycontracts/forward.py)
+* [and its tests](pycontracts/tests/test_forward.py)
 
 #### Pseudo implementation
 ```python
 def forward(self, sig, target, value, input):
-    assert(ecrecover(keccak256(self.address + self.nonce + target + value + input), sig) == self.owner)
+    assert(ecrecover(keccak256(self.address + target + value + self.nonce + input), sig) == self.owner)
     self.nonce += 1
     return call(target, value, input)
 ```
