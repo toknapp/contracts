@@ -1,0 +1,7 @@
+src/build
+
+**/.*.flag
+
+**/venv
+**/__pycache__
+**/.pytest_cache

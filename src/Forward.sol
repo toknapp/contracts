@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 
 contract Forward {
-    address owner;
-    uint256 nonce;
+    address private owner;
+    uint256 private nonce;
 
     constructor(address _owner) public {
         owner = _owner;
@@ -32,6 +32,7 @@ contract Forward {
         bytes memory sd = new bytes(32+32+32+32+input.length);
         uint sd_;
         uint i_;
+        uint256 n = nonce;
         address a = this;
         assembly {
             sd_ := add(sd, 32)
@@ -46,7 +47,7 @@ contract Forward {
             mstore(sd_, value)
             sd_ := add(sd_, 32)
 
-            mstore(sd_, nonce_offset)
+            mstore(sd_, n)
             sd_ := add(sd_, 32)
         }
         memcpy(sd_, i_, input.length);
@@ -75,6 +76,7 @@ contract Forward {
     }
 
     function getNonce() public view returns (uint256) { return nonce; }
+    function getOwner() public view returns (address) { return owner; }
 
     function() public payable { }
 }
