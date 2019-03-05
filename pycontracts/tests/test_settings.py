@@ -52,4 +52,7 @@ def deploy(contract, faucet = None):
         'data': contract['code']
     })
     r = w3.eth.waitForTransactionReceipt(tx_hash)
-    return w3.eth.contract(r.contractAddress, abi = contract.get('abi'))
+    if 'abi' in contract:
+        return w3.eth.contract(r.contractAddress, abi = contract.get('abi'))
+    else:
+        return w3.eth.contract(r.contractAddress)
