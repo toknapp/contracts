@@ -247,3 +247,86 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
         self.assertEqual(w3.eth.getBalance(other.address), v)
         self.assertEqual(w3.eth.getBalance(beneficiary), v)
+
+    def test_reject_incorrect_target(self):
+        value = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, value)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # build a successful transaction
+        f = self.fwd.build(
+            private_key = self.pk,
+            target = beneficiary,
+            value = value,
+            data = b'',
+            nonce = None,
+        )
+        v, r, s, _, value, data = f.args
+
+        other = fresh.address()
+        with self.assertRaises(ValueError):
+            self.fwd.contract.functions.forward(
+                v, r, s, other, value, data
+            ).transact({ 'from': faucets.random() })
+
+        self.assertEqual(w3.eth.getBalance(other), 0)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+
+    def test_reject_incorrect_value(self):
+        value = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, value)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # build a successful transaction
+        f = self.fwd.build(
+            private_key = self.pk,
+            target = beneficiary,
+            value = value,
+            data = b'',
+            nonce = None,
+        )
+        v, r, s, beneficiary, _, data = f.args
+
+        with self.assertRaises(ValueError):
+            self.fwd.contract.functions.forward(
+                v, r, s, beneficiary, random.randint(1, value - 1), data
+            ).transact({ 'from': faucets.random() })
+
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+
+    def test_reject_incorrect_data(self):
+        value = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, value)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # build a successful transaction
+        f = self.fwd.build(
+            private_key = self.pk,
+            target = beneficiary,
+            value = value,
+            data = os.urandom(10),
+            nonce = None,
+        )
+        v, r, s, beneficiary, value, _ = f.args
+
+        with self.assertRaises(ValueError):
+            self.fwd.contract.functions.forward(
+                v, r, s, beneficiary, value, os.urandom(10)
+            ).transact({ 'from': faucets.random() })
+
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), value)

@@ -46,7 +46,7 @@ class Forward:
             + nonce.to_bytes(32, 'big') \
             + data)
 
-    def _build(self, private_key, target, value, data, nonce):
+    def build(self, private_key, target, value, data, nonce):
         if hasattr(data, 'buildTransaction'):
             t = data.buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
             data = Web3.toBytes(hexstr = t['data'])
@@ -71,7 +71,7 @@ class Forward:
         )
 
     def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
-        return self._build(private_key, target, value, data, nonce).transact({ 'from': originator })
+        return self.build(private_key, target, value, data, nonce).transact({ 'from': originator })
 
     def call(self, private_key, target = None, value = 0, data = b'', nonce = None):
-        return self._build(private_key, target, value, data, nonce).call()
+        return self.build(private_key, target, value, data, nonce).call()
