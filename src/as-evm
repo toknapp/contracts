@@ -1,11 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
 set -o errexit -o pipefail
 SOLC=${SOLC-solc}
-
-process_solc_output() {
-    cat 1>&2 $1
-}
 
 TMP=$(mktemp)
 trap "rm -f $TMP" EXIT
