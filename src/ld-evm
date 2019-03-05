@@ -1,0 +1,15 @@
+#!/bin/sh
+
+AS=./as-evm
+
+set -o errexit
+
+INIT=${2-/dev/null}
+BODY=$1
+
+cat $INIT
+
+BOOT_LENGTH=$($AS boot.evm 2>/dev/null | xxd -r -p | wc -c)
+sed "s/0x42/$BOOT_LENGTH/g" boot.evm | $AS 2>/dev/null
+
+cat $BODY

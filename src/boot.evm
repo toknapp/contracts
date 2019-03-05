@@ -1,0 +1,11 @@
+{
+    0x42
+    codesize
+    sub       // l
+    dup1      // l l
+    0x42      // 0x42 l l
+    0x0       // 0 0x42 l l
+    codecopy  // l
+    0x0       // 0 l
+    return
+}

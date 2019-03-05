@@ -5,11 +5,15 @@ SOLC=${SOLC-solc}
 
 process_solc_output() {
     cat 1>&2 $1
-    cat $1 \
-        | sed '1,/^Binary representation:$/d' \
-        | sed '/^Text representation:/,$d' \
-        | tr -d '\n' \
-        | sed 's/$/\n/'
 }
 
-process_solc_output <($SOLC --optimize --assemble $1)
+TMP=$(mktemp)
+trap "rm -f $TMP" EXIT
+
+$SOLC --optimize --assemble $1 | 1>&2 tee $TMP
+
+cat $TMP \
+    | sed '1,/^Binary representation:$/d' \
+    | sed '/^Text representation:/,$d' \
+    | tr -d '\n' \
+    | sed 's/$/\n/'

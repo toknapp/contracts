@@ -5,11 +5,11 @@ all: $(OUT)/Coin.bin $(OUT)/Forward.bin $(OUT)/Echo.bin $(OUT)/State.bin $(OUT)/
 %: $(OUT)/%.bin
 
 $(OUT)/%.bin: %.sol
-	solc --optimize --overwrite -o $(OUT) --abi --hashes --bin $<
+	solc --optimize --overwrite -o $(OUT) --asm --abi --hashes --bin $<
 
 $(OUT)/%.bin: %.evm
 	mkdir -p $(basename $@)
-	./as-evm <$< >$@
+	./as-evm <$< | ./ld-evm >$@
 
 clean:
 	rm -rf $(OUT)
