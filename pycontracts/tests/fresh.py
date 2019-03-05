@@ -5,16 +5,7 @@ from eth_keys import keys
 
 def private_key(balance = None):
     pk = keys.PrivateKey(os.urandom(32))
-
-    if balance:
-        tx = w3.eth.sendTransaction(
-            {
-                "from": faucets.random(),
-                "to": to_address(pk),
-                "value": balance
-            }
-        )
-
+    if balance: faucets.ether(to_address(pk), balance)
     return pk
 
 def address():

@@ -35,23 +35,14 @@ class UseCaseTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
 
         v = random.randint(0, 1000000000)
-        tx = w3.eth.sendTransaction({
-            "from": faucets.random(),
-            "to": self.fwd.address,
-            "value": v,
-            "gas": 90000,
-        })
+        faucets.ether(self.fwd.address, v)
 
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
 
     def test_send_ether(self):
         # provision some eth
         v = random.randint(1, 1000000000)
-        tx = w3.eth.sendTransaction({
-            "from": faucets.random(),
-            "to": self.fwd.address,
-            "value": v,
-        })
+        faucets.ether(self.fwd.address, v)
 
         # pick a beneficiary
         beneficiary = fresh.address()

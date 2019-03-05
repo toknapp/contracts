@@ -37,6 +37,13 @@ class Faucets:
     def random(self):
         return random.choice(self.addresses)
 
+    def ether(self, to, amount):
+        w3.eth.sendTransaction({
+            "from": self.random(),
+            "to": to,
+            "value": amount,
+        })
+
 faucets = Faucets()
 
 def deploy(contract, faucet = None):
