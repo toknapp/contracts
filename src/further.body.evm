@@ -1,0 +1,4 @@
+{
+    sload(0) 0 mstore
+    return(0, 32)
+}
