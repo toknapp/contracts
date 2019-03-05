@@ -14,7 +14,7 @@ contract Forward {
         address target, uint256 value, bytes input
     ) public payable returns (bool) {
         require(
-            ecrecover(keccak256(signingData(target, value, input)), v, r, s) == owner,
+            ecrecover(signingData(target, value, input), v, r, s) == owner,
             "invalid signature"
         );
 
@@ -28,10 +28,11 @@ contract Forward {
         address target,
         uint256 value,
         bytes input
-    ) public view returns (bytes) {
+    ) public view returns (bytes32) {
         bytes memory sd = new bytes(32+32+32+32+input.length);
         uint sd_;
         uint i_;
+        uint256 n = nonce;
         address a = this;
         assembly {
             sd_ := add(sd, 32)
@@ -46,12 +47,12 @@ contract Forward {
             mstore(sd_, value)
             sd_ := add(sd_, 32)
 
-            mstore(sd_, nonce_offset)
+            mstore(sd_, n)
             sd_ := add(sd_, 32)
         }
         memcpy(sd_, i_, input.length);
 
-        return sd;
+        return keccak256(sd);
     }
 
     // https://github.com/Arachnid/solidity-stringutils/blob/3c63f18245645ba600cae2191deba7221512f753/src/strings.sol#L45

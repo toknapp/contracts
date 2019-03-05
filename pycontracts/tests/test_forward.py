@@ -173,6 +173,77 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-    @unittest.skip('not implemented')
+    def test_reject_replay_to_same_contract(self):
+        v = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, v+v)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v+v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # make a successful transaction
+        tx = self.fwd.transact(
+            private_key = self.pk,
+            target = beneficiary,
+            value = v,
+            originator = faucets.random(),
+        )
+
+        # check the intermediate balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), v)
+
+        # try sending the same input in another call
+        with self.assertRaises(ValueError):
+            w3.eth.sendTransaction({
+                "from": faucets.random(),
+                "to": self.fwd.address,
+                "data": w3.eth.getTransaction(tx).input
+            })
+
+        # check the final balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), v)
+
     def test_reject_incorrect_contract_address(self):
-        self.fail()
+        v = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, v)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # make a successful transaction
+        tx = self.fwd.transact(
+            private_key = self.pk,
+            target = beneficiary,
+            value = v,
+            originator = faucets.random(),
+        )
+
+        # check the intermediate balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
+        self.assertEqual(w3.eth.getBalance(beneficiary), v)
+
+        # deploy another contract with the same owner and same balance
+        other = forward.deploy(
+            w3,
+            owner = address(self.pk),
+            originator = faucets.random()
+        )
+        faucets.ether(other.address, v)
+
+        # try sending the same input in another call to the new contract
+        with self.assertRaises(ValueError):
+            w3.eth.sendTransaction({
+                "from": faucets.random(),
+                "to": other.address,
+                "data": w3.eth.getTransaction(tx).input
+            })
+
+        # check the final balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
+        self.assertEqual(w3.eth.getBalance(other.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), v)

@@ -1,5 +1,6 @@
 from pycontracts import contracts
 from web3 import Web3
+from eth_utils import keccak
 
 def contract(w3, address):
     return Forward(
@@ -38,11 +39,12 @@ class Forward:
         return self.contract.functions.getNonce().call()
 
     def signing_data(self, target, value, data, nonce):
-        return bytes(12) + Web3.toBytes(hexstr=self.address) \
+        return keccak(
+            bytes(12) + Web3.toBytes(hexstr=self.address) \
             + bytes(12) + Web3.toBytes(hexstr=target) \
             + value.to_bytes(32, 'big') \
             + nonce.to_bytes(32, 'big') \
-            + data
+            + data)
 
     def _build(self, private_key, target, value, data, nonce):
         if hasattr(data, 'buildTransaction'):
@@ -54,7 +56,7 @@ class Forward:
         if nonce is None:
             nonce = self.nonce()
 
-        sig = private_key.sign_msg(
+        sig = private_key.sign_msg_hash(
             self.signing_data(
                 target = target,
                 value = value,
