@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -o errexit -o pipefail
+SOLC=${SOLC-solc}
+
+process_solc_output() {
+    cat 1>&2 $1
+    cat $1 \
+        | sed '1,/^Binary representation:$/d' \
+        | sed '/^Text representation:/,$d' \
+        | tr -d '\n' \
+        | sed 's/$/\n/'
+}
+
+process_solc_output <($SOLC --optimize --assemble $1)
