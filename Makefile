@@ -7,7 +7,10 @@ GANACHE=ganache-cli\
 			--port=$(GANACHE_PORT) \
 			--host=$(GANACHE_HOST)
 
-export CONTRACT_BUILD_PATH=$(shell pwd)/src/build
+DOCKER ?= docker
+DOCKER_IMAGE ?= contracts
+
+export CONTRACT_BUILD_PATH ?= $(shell pwd)/src/build
 
 ganache:
 	$(GANACHE)
@@ -26,5 +29,14 @@ repl: contracts
 
 sbt:
 	cd scala && sbt
+
+docker-image:
+	$(DOCKER) build -t $(DOCKER_IMAGE) .
+
+run-docker: docker-image
+	$(DOCKER) run \
+		--net=host \
+		-e GANACHE_TARGET=$(GANACHE_TARGET) \
+		$(DOCKER_IMAGE) run
 
 .PHONY: ganache sbt debug test repl contracts
