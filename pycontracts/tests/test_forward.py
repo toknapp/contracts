@@ -133,7 +133,7 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-        # try sending it
+        # try calling the contract with an incorrect private key
         with self.assertRaises(ValueError):
             self.fwd.transact(
                 private_key = fresh.private_key(),
@@ -146,9 +146,32 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-    @unittest.skip('not implemented')
     def test_reject_incorrect_nonce(self):
-        self.fail()
+        v = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, v)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # try calling the contract with an incorrect nonce
+        correct_nonce = self.fwd.nonce()
+        ns = list(filter(lambda i: i != correct_nonce, range(100000)))
+        nonce = random.choice(ns)
+
+        with self.assertRaises(ValueError):
+            self.fwd.transact(
+                private_key = self.pk,
+                target = beneficiary,
+                value = v,
+                originator = faucets.random(),
+                nonce = nonce
+            )
+
+        # check the final balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
     @unittest.skip('not implemented')
     def test_reject_incorrect_contract_address(self):
