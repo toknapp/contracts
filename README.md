@@ -1,6 +1,8 @@
 Upvest's smart contracts
 ========================
 
+[![CircleCI](https://circleci.com/gh/toknapp/contracts/tree/master.svg?style=svg)](https://circleci.com/gh/toknapp/contracts/tree/master)
+
 Forwarding contract
 -------------------
 ### Background (the why)
