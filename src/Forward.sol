@@ -15,7 +15,7 @@ contract Forward {
     ) public payable returns (bool) {
         require(
             ecrecover(keccak256(signingData(target, value, input)), v, r, s) == owner,
-            "invalid signature lol"
+            "invalid signature"
         );
 
         nonce += 1;

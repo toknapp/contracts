@@ -116,9 +116,35 @@ class UseCaseTests(unittest.TestCase):
         self.fail()
 
 class SecurityTests(unittest.TestCase):
-    @unittest.skip('not implemented')
-    def test_reject_invalid_signature(self):
-        self.fail()
+    def setUp(self):
+        self.pk = fresh.private_key()
+        self.fwd = forward.deploy(
+            w3,
+            owner = address(self.pk),
+            originator = faucets.random()
+        )
+
+    def test_reject_incorrect_private_key(self):
+        v = random.randint(1, 1000000000)
+        faucets.ether(self.fwd.address, v)
+        beneficiary = fresh.address()
+
+        # check the initial balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
+
+        # try sending it
+        with self.assertRaises(ValueError):
+            self.fwd.transact(
+                private_key = fresh.private_key(),
+                target = beneficiary,
+                value = v,
+                originator = faucets.random()
+            )
+
+        # check the final balances
+        self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
+        self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
     @unittest.skip('not implemented')
     def test_reject_incorrect_nonce(self):
