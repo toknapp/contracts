@@ -7,5 +7,8 @@ services:
     build: .
     environment:
       - GANACHE_TARGET=http://ganache:8545
+      - GANACHE_HOST=ganache
+      - GANACHE_PORT=8545
     depends_on:
       - ganache
+    command: wait-for-ganache run

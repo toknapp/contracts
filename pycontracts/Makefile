@@ -8,6 +8,12 @@ export PYTEST = $(VENV)/bin/pytest
 run: deps
 	$(PYTEST) -v --disable-warnings .
 
+wait-for-ganache:
+	while ! nc -z $(GANACHE_HOST) $(GANACHE_PORT); do \
+	  echo 1>&1 "waiting for ganache...";  \
+	  sleep 0.1; \
+	done
+
 deps: .requirements.flag
 test-deps: deps .requirements.test.flag
 
@@ -22,3 +28,4 @@ clean:
 	rm -rf .*.flag $(VENV) __pycache__
 
 .PHONY: run deps clean
+.PHONY: wait-for-ganache
