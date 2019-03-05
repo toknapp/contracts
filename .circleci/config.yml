@@ -1,0 +1,17 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: docker/compose:1.23.2
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker-compose run tests
+
+workflows:
+  version: 2
+
+  tests:
+    jobs:
+      - test
