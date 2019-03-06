@@ -8,7 +8,8 @@ class FurtherTests(
         unittest.TestCase,
         test_forward.BasicTests,
         test_forward.UseCaseTests,
-        test_forward.SecurityTests):
+        # TODO: test_forward.SecurityTests
+        ):
 
     def deploy(self, owner):
         return Further.deploy(w3, owner, originator = faucets.random())

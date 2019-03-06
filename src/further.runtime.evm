@@ -7,7 +7,7 @@ sload
 push 0
 mstore
 
-NB. memory[32:32] = nonce
+NB. memory[32:32+32] = nonce
 push 1
 sload
 push 32
