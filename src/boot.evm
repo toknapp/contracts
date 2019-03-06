@@ -1,14 +1,12 @@
-{
-    pc
-    0x42
-    add       // o
-    dup1      // o o
-    codesize
-    sub       // l o
-    dup1      // l l o
-    swap2     // o l l
-    0x0       // 0 o l l
-    codecopy  // l
-    0x0       // 0 l
-    return
-}
+pc
+push 0x42
+add       NB. o
+dup1      NB. o o
+codesize
+sub       NB. l o
+dup1      NB. l l o
+swap2     NB. o l l
+push 0x0  NB. 0 o l l
+codecopy  NB. l
+push 0x0  NB. 0 l
+return

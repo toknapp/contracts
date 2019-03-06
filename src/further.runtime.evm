@@ -1,0 +1,66 @@
+calldatasize
+jumpi @body
+
+NB. memory[0:32] = owner
+push 0
+sload
+push 0
+mstore
+
+NB. memory[32:32+32] = nonce
+push 1
+sload
+push 32
+mstore
+
+push 52 NB. 20 + 32
+push 12
+return
+
+body:
+
+NB. input: uint256 target, uint256 value, bytes data
+
+NB. len(data) = calldatasize - len(target) - len(value)
+push 64
+dup1          NB. 64 64
+calldatasize  NB. calldatasize 64 64
+sub           NB. (len(data) = calldatasize - 64) 64
+dup1          NB. len(data) len(data) 64
+swap2         NB. 64 len(data) len(data)
+push 0        NB. 0 64 len(data) len(data)
+calldatacopy  NB. len(data), memory[0:len(data)] = data
+
+push 0
+dup1 NB. 0 0 len(data)
+swap2 NB. len(data) 0 0
+
+push 0 NB. 0 len(data) 0 0
+
+push 32
+calldataload NB. value 0 len(data) 0 0
+
+push 0
+calldataload NB. target value 0 len(data) 0 0
+
+NB. TODO compute needed gas
+gas NB. gas target value 0 len(data) 0 0
+
+call
+pop NB. TODO check call result
+
+push 1
+dup1
+dup1  NB. 1 1 1
+sload NB. nonce 1 1
+add   NB. (nonce+1) 1
+swap1 NB. 1 (nonce+1)
+sstore NB.
+
+returndatasize NB. l
+dup1           NB. l l
+push 0         NB. 0 l l
+dup1           NB. 0 0 l l
+returndatacopy NB. l
+push 0
+return

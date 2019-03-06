@@ -1,6 +1,6 @@
 OUT=build
 
-CONTRACTS=Coin Forward Echo State bare_metal
+CONTRACTS=Coin Forward Echo State bare_metal further
 
 all: $(foreach c,$(CONTRACTS),$(OUT)/$c.bin)
 
