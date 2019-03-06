@@ -1,13 +1,13 @@
 import unittest
 
-from pycontracts import forward
+from pycontracts.forward import ForwardSolidity
 from pycontracts.tests.test_settings import *
 from pycontracts.tests import fresh
 
 class BasicTests(unittest.TestCase):
     def setUp(self):
         self.pk = fresh.private_key()
-        self.fwd = forward.deploy(
+        self.fwd = ForwardSolidity.deploy(
             w3,
             owner = address(self.pk),
             originator = faucets.random()
@@ -25,7 +25,7 @@ class BasicTests(unittest.TestCase):
 class UseCaseTests(unittest.TestCase):
     def setUp(self):
         self.pk = fresh.private_key()
-        self.fwd = forward.deploy(
+        self.fwd = ForwardSolidity.deploy(
             w3,
             owner = address(self.pk),
             originator = faucets.random()
@@ -99,7 +99,7 @@ class UseCaseTests(unittest.TestCase):
         self.assertEqual(contract.functions.balanceOf(self.fwd.address).call(), v)
         self.assertEqual(contract.functions.balanceOf(beneficiary).call(), 0)
 
-        # send all ether
+        # send all tokens
         self.fwd.transact(
             private_key = self.pk,
             data = contract.functions.transfer(beneficiary, v),
@@ -118,7 +118,7 @@ class UseCaseTests(unittest.TestCase):
 class SecurityTests(unittest.TestCase):
     def setUp(self):
         self.pk = fresh.private_key()
-        self.fwd = forward.deploy(
+        self.fwd = ForwardSolidity.deploy(
             w3,
             owner = address(self.pk),
             originator = faucets.random()
@@ -228,7 +228,7 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(beneficiary), v)
 
         # deploy another contract with the same owner and same balance
-        other = forward.deploy(
+        other = ForwardSolidity.deploy(
             w3,
             owner = address(self.pk),
             originator = faucets.random()
@@ -257,8 +257,8 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-        # build a successful transaction
-        f = self.fwd.build(
+        # sign a successful transaction
+        f = self.fwd.sign(
             private_key = self.pk,
             target = beneficiary,
             value = value,
@@ -286,8 +286,8 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-        # build a successful transaction
-        f = self.fwd.build(
+        # sign a successful transaction
+        f = self.fwd.sign(
             private_key = self.pk,
             target = beneficiary,
             value = value,
@@ -313,8 +313,8 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
-        # build a successful transaction
-        f = self.fwd.build(
+        # sign a successful transaction
+        f = self.fwd.sign(
             private_key = self.pk,
             target = beneficiary,
             value = value,
