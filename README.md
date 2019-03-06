@@ -18,8 +18,11 @@ intermediate contract talking to the ERC20 contracts (so that it will be the
 
 ### The code (the how)
 * [Solidity implementation](src/Forward.sol)
-* [Python abstraction](pycontracts/forward.py)
-* [and its tests](pycontracts/tests/test_forward.py)
+* [Bare-metal EVM implementation](src/further.runtime.evm)
+* [Python abstraction](pycontracts/forward.py) with implementations:
+  - [Solidity contract wrapper](pycontracts/forward_solidity.py)
+  - [Bare-metal contract wrapper](pycontracts/further.py)
+* [and their tests](pycontracts/tests/test_forward.py)
 
 #### Pseudo implementation
 ```python
