@@ -49,7 +49,7 @@ faucets = Faucets()
 def deploy(contract, faucet = None):
     tx_hash = w3.eth.sendTransaction({
         'from': faucet or faucets.random(),
-        'data': contract['code']
+        'data': contract['deploy']
     })
     r = w3.eth.waitForTransactionReceipt(tx_hash)
     if 'abi' in contract:
