@@ -96,6 +96,3 @@ class ForwardSolidity(Forward):
 
     def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
         return self.sign(private_key, target, value, data, nonce).transact({ 'from': originator })
-
-    def call(self, private_key, target = None, value = 0, data = b'', nonce = None):
-        return self.sign(private_key, target, value, data, nonce).call()
