@@ -16,7 +16,10 @@ class BasicTests:
     def test_return_value(self):
         if not hasattr(self.fwd, 'call'):
             raise unittest.SkipTest("contract does not support .call")
-        raise NotImplementedError
+
+        echo = deploy(contracts['Echo'])
+        i = random.randint(0, 1000)
+        self.assertEqual(self.fwd.call(private_key = self.pk, data = echo.functions.echo(i), type=int), i)
 
 class UseCaseTests:
     def test_receive_ether(self):
@@ -71,7 +74,7 @@ class UseCaseTests:
         self.assertEqual(contract.functions.fetch(self.fwd.address).call(), i)
 
         if hasattr(self.fwd, 'call'):
-            self.assertEqual(self.fwd.call(private_key = self.pk, data = contract.functions.fetch()), i)
+            self.assertEqual(self.fwd.call(private_key = self.pk, data = contract.functions.fetch(), type=int), i)
 
     def test_transfer_erc20(self):
         # provision a coin and some tokens
