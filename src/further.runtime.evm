@@ -1,3 +1,15 @@
+NB. memory[0:32] = owner
 push 0
+sload
 push 0
+mstore
+
+NB. memory[32:32] = nonce
+push 1
+sload
+push 32
+mstore
+
+push 52 NB. 20 + 32
+push 12
 return

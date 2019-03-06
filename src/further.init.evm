@@ -1,1 +1,7 @@
-pop
+NB. expected initial stack: owner
+
+NB. storage[0] = owner
+push 0
+sstore
+
+NB. storage[1] = nonce

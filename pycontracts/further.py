@@ -15,7 +15,7 @@ class Further(Forward):
     @staticmethod
     def deploy(w3, owner, originator):
         def push(bs):
-            return bytes(0x60 + len(bs)) + bs
+            return (0x60 + len(bs) - 1).to_bytes(1, 'big') + bs
 
         init = push(Web3.toBytes(hexstr=owner)) + contracts['further']['deploy']
 
@@ -28,10 +28,12 @@ class Further(Forward):
 
     @property
     def owner(self):
-        raise NotImplementedError
+        bs = self.w3.eth.call({ 'to': self.address })
+        return Web3.toChecksumAddress(Web3.toHex(bs[:20]))
 
     def nonce(self):
-        raise NotImplementedError
+        bs = self.w3.eth.call({ 'to': self.address })
+        return int.from_bytes(bs[20:32], 'big')
 
     def sign(self, private_key, target, value, data, nonce):
         raise NotImplementedError
