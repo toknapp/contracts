@@ -1,4 +1,7 @@
-{
-    sload(0) 0 mstore
-    return(0, 32)
-}
+push 0
+sload
+push 0
+mstore
+push 32
+push 0
+return

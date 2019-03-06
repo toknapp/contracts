@@ -1,5 +1,6 @@
 from pycontracts import contracts
 from pycontracts.forward import Forward
+from web3 import Web3
 
 class Further(Forward):
     def __init__(self, w3, address):
@@ -10,11 +11,17 @@ class Further(Forward):
     def wrap(w3, address):
         return Further(w3, address)
 
+
     @staticmethod
     def deploy(w3, owner, originator):
+        def push(bs):
+            return bytes(0x60 + len(bs)) + bs
+
+        init = push(Web3.toBytes(hexstr=owner)) + contracts['further']['deploy']
+
         tx_hash = w3.eth.sendTransaction({
             'from': originator,
-            'data': contracts['further']['deploy'],
+            'data': init,
         })
         r = w3.eth.waitForTransactionReceipt(tx_hash)
         return Further.wrap(w3, r.contractAddress)
