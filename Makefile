@@ -36,5 +36,10 @@ run-docker: docker-image
 		-e GANACHE_TARGET=$(GANACHE_TARGET) \
 		$(DOCKER_IMAGE) run
 
+clean:
+	$(MAKE) -C src clean
+	$(MAKE) -C pycontracts clean
+
 .PHONY: ganache
 .PHONY: debug test repl contracts
+.PHONY: clean

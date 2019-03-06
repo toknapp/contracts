@@ -1,0 +1,16 @@
+#!/bin/sh
+
+AS=./as-evm
+
+set -o errexit -o pipefail
+
+RUNTIME=$1
+INIT=${2-/dev/null}
+BOOT=${3-boot.evm}
+
+cat $INIT | tr -d '\n'
+
+BOOT_LENGTH=$($AS -i boot.evm | wc -c | xargs -I{} expr {} / 2)
+sed "s/0x42/$BOOT_LENGTH/g" $BOOT | $AS 2>/dev/null | tr -d '\n'
+
+cat $RUNTIME | tr -d '\n'

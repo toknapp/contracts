@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -o errexit -o pipefail
+
+SOLC=${SOLC-solc}
+INPUT=-
+while getopts "s:vi:" opt; do
+    case $opt in
+        s) SOLC=$OPTARG ;;
+        v) VERBOSE=1 ;;
+        i) INPUT="$OPTARG" ;;
+        \?) echo "Invalid option: -$OPTARG" >&2
+            exit 2 ;;
+    esac
+done
+shift $((OPTIND-1))
+
+TMP=$(mktemp)
+trap "rm -f $TMP" EXIT
+
+"$SOLC" --optimize --assemble "$INPUT" | if [ -n "$VERBOSE" ]; then
+    1>&2 tee "$TMP"
+else
+    cat > "$TMP"
+fi
+
+cat "$TMP" \
+    | sed '1,/^Binary representation:$/d' \
+    | sed '/^Text representation:/,$d' \
+    | tr -d '\n'
