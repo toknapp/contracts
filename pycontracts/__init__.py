@@ -18,7 +18,7 @@ for contract in glob(os.path.join(os.getenv("CONTRACT_BUILD_PATH"), "[!.]*.bin")
         with open(init, "r") as h:
             contracts[name]['init'] = unhexlify(h.read())
 
-    body = contract[:-4] + ".body.bin"
-    if os.path.isfile(body):
-        with open(body, "r") as h:
-            contracts[name]['body'] = unhexlify(h.read())
+    runtime = contract[:-4] + ".runtime.bin"
+    if os.path.isfile(runtime):
+        with open(runtime, "r") as h:
+            contracts[name]['runtime'] = unhexlify(h.read())

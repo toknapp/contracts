@@ -1,16 +1,20 @@
 OUT=build
 
-all: $(OUT)/Coin.bin $(OUT)/Forward.bin $(OUT)/Echo.bin $(OUT)/State.bin $(OUT)/further.bin
+CONTRACTS=Coin Forward Echo State bare_metal
+
+all: $(foreach c,$(CONTRACTS),$(OUT)/$c.bin)
 
 $(OUT)/%.bin: %.sol
 	solc --optimize --overwrite -o $(OUT) --asm --abi --hashes --bin $<
 
-$(OUT)/%.bin: $(OUT)/%.body.bin $(OUT)/%.init.bin boot.evm
+$(OUT)/%.bin: $(OUT)/%.runtime.bin $(OUT)/%.init.bin boot.evm
 	./ld-evm $^ >$@
 
-$(OUT)/%.bin: %.evm
-	mkdir -p $(basename $@)
+$(OUT)/%.bin: %.evm | $(OUT)
 	./as-evm <$< >$@
+
+$(OUT):
+	mkdir -p $@
 
 clean:
 	rm -rf $(OUT)
