@@ -44,9 +44,9 @@ class Call:
     def signing_data(self):
         return keccak(
             bytes(12) + Web3.toBytes(hexstr=self.contract.address) \
+            + self.nonce.to_bytes(32, 'big') \
             + bytes(12) + Web3.toBytes(hexstr=self.target) \
             + self.value.to_bytes(32, 'big') \
-            + self.nonce.to_bytes(32, 'big') \
             + self.data)
 
     def sign(self, private_key):

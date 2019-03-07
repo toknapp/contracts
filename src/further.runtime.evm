@@ -22,6 +22,44 @@ body:
 NB. input: | uint8 v | uint256 r | uint256 s | uint256 target | uint256 value | bytes data
 NB. offset | 0       | 1         | 33        | 65             | 97            | 129
 
+
+NB. Compute the signing data
+address
+push 0
+mstore NB. memory[0..31] = address
+
+push 1
+sload
+push 32
+mstore NB. memory[32..63] = nonce
+
+push 65       NB. size(v) + size(r) + size(s)
+calldatasize
+sub           NB. size(target) + size(value) + size(data)
+push 65
+push 64
+calldatacopy NB. memory[64..95] = target, memory[96..127] = value, memory[128..] = data
+
+NB. Compute the hash
+push 1
+calldatasize
+sub
+push 0
+sha3
+push 0
+mstore  NB. memory[0..32] = keccak(address + nonce + target + value + data)
+
+NB. Check the signature
+push 65
+push 0
+push 63
+calldatacopy NB. memory[32..63] = v, memory[64..95] = r, memory[96..127]
+
+NB. TODO call ecdsarecover (addr = 1)
+
+
+NB. Prepare the stack for the call op
+
 push 129      NB. offset(data)
 dup1          NB. offset(data) offset(data)
 calldatasize  NB. calldatasize offset(data) offset(data)
