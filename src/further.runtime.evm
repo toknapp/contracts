@@ -50,16 +50,41 @@ push 0
 mstore  NB. memory[0..32] = keccak(address + nonce + target + value + data)
 
 NB. Check the signature
+push 0
+push 32
+mstore       NB. memory[32..63] = 0
 push 65
 push 0
 push 63
-calldatacopy NB. memory[32..63] = v, memory[64..95] = r, memory[96..127]
+calldatacopy NB. memory[32..63] = v, memory[64..95] = r, memory[96..127] = s
 
-NB. TODO call ecdsarecover (addr = 1)
+NB. call ecdsarecover (addr = 1)
+push 32  NB. retLength
+push 0   NB. retOffset
+push 128 NB. argsLength
+push 0   NB. argsOffset
+dup1     NB. value
+push 1   NB. addr
+gas      NB. gas TODO: better calculation?
+call
+iszero
+jumpi @call_failed
+
+returndatasize
+iszero
+jumpi @sig_failed
+
+NB. compare owner and recovered address
+push 0
+sload
+push 0
+mload
+eq
+iszero
+jumpi @sig_failed
 
 
 NB. Prepare the stack for the call op
-
 push 129      NB. offset(data)
 dup1          NB. offset(data) offset(data)
 calldatasize  NB. calldatasize offset(data) offset(data)
@@ -82,7 +107,8 @@ NB. TODO compute needed gas
 gas NB. gas target value 0 len(data) 0 0
 
 call
-pop NB. TODO check call result
+iszero
+jumpi @call_failed
 
 push 1
 dup1
@@ -99,3 +125,21 @@ dup1           NB. 0 0 l l
 returndatacopy NB. l
 push 0
 return
+
+NB. TODO test this
+call_failed:
+returndatasize NB. l
+dup1           NB. l l
+push 0         NB. 0 l l
+dup1           NB. 0 0 l l
+returndatacopy NB. l
+push 0
+revert
+
+sig_failed:
+push 1
+push 0
+mstore
+push 32
+push 0
+revert

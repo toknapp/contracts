@@ -44,18 +44,18 @@ class Further(Forward):
             + call.data
 
     def transact(self, call, originator):
-        self.w3.eth.sendTransaction({
+        return self.w3.eth.sendTransaction({
             'to': self.address,
             'from': originator,
             'data': Further.build(call),
-            'gasLimit': 100000000
+            'gasLimit': 10000000000
         })
 
     def call(self, call, type=bytes):
         res = self.w3.eth.call({
             'to': self.address,
             'data': Further.build(call),
-            'gasLimit': 100000000
+            'gasLimit': 10000000000
         })
         if type == bytes:
             return res
