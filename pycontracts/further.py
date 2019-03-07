@@ -36,7 +36,10 @@ class Further(Forward):
 
     @staticmethod
     def build(call):
-        return bytes(12) + Web3.toBytes(hexstr=call.target) \
+        return (27 + call.signature.v).to_bytes(1, 'big') \
+            + call.signature.r.to_bytes(32, 'big') \
+            + call.signature.s.to_bytes(32, 'big') \
+            + bytes(12) + Web3.toBytes(hexstr=call.target) \
             + call.value.to_bytes(32, 'big') \
             + call.data
 

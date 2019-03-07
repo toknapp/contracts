@@ -19,28 +19,25 @@ return
 
 body:
 
-NB. input: uint256 target, uint256 value, bytes data
+NB. input: | uint8 v | uint256 r | uint256 s | uint256 target | uint256 value | bytes data
+NB. offset | 0       | 1         | 33        | 65             | 97            | 129
 
-NB. len(data) = calldatasize - len(target) - len(value)
-push 64
-dup1          NB. 64 64
-calldatasize  NB. calldatasize 64 64
-sub           NB. (len(data) = calldatasize - 64) 64
-dup1          NB. len(data) len(data) 64
-swap2         NB. 64 len(data) len(data)
-push 0        NB. 0 64 len(data) len(data)
+push 129      NB. offset(data)
+dup1          NB. offset(data) offset(data)
+calldatasize  NB. calldatasize offset(data) offset(data)
+sub           NB. (len(data) = calldatasize - offset(data)) offset(data)
+dup1          NB. len(data) len(data) offset(data)
+swap2         NB. offset(data) len(data) len(data)
+push 0        NB. 0 offset(data) len(data) len(data)
 calldatacopy  NB. len(data), memory[0:len(data)] = data
 
 push 0
-dup1 NB. 0 0 len(data)
-swap2 NB. len(data) 0 0
-
-push 0 NB. 0 len(data) 0 0
-
-push 32
+dup1         NB. 0 0 len(data)
+swap2        NB. len(data) 0 0
+push 0       NB. 0 len(data) 0 0
+push 97      NB. offset(value)
 calldataload NB. value 0 len(data) 0 0
-
-push 0
+push 65      NB. offset(target)
 calldataload NB. target value 0 len(data) 0 0
 
 NB. TODO compute needed gas
@@ -51,10 +48,10 @@ pop NB. TODO check call result
 
 push 1
 dup1
-dup1  NB. 1 1 1
-sload NB. nonce 1 1
-add   NB. (nonce+1) 1
-swap1 NB. 1 (nonce+1)
+dup1   NB. 1 1 1
+sload  NB. nonce 1 1
+add    NB. (nonce+1) 1
+swap1  NB. 1 (nonce+1)
 sstore NB.
 
 returndatasize NB. l
