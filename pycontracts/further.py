@@ -36,23 +36,26 @@ class Further(Forward):
 
     @staticmethod
     def build(call):
-        return bytes(12) + Web3.toBytes(hexstr=call.target) \
+        return (27 + call.signature.v).to_bytes(1, 'big') \
+            + call.signature.r.to_bytes(32, 'big') \
+            + call.signature.s.to_bytes(32, 'big') \
+            + bytes(12) + Web3.toBytes(hexstr=call.target) \
             + call.value.to_bytes(32, 'big') \
             + call.data
 
     def transact(self, call, originator):
-        self.w3.eth.sendTransaction({
+        return self.w3.eth.sendTransaction({
             'to': self.address,
             'from': originator,
             'data': Further.build(call),
-            'gasLimit': 100000000
+            'gasLimit': 10000000000
         })
 
     def call(self, call, type=bytes):
         res = self.w3.eth.call({
             'to': self.address,
             'data': Further.build(call),
-            'gasLimit': 100000000
+            'gasLimit': 10000000000
         })
         if type == bytes:
             return res

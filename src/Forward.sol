@@ -41,13 +41,13 @@ contract Forward {
             mstore(sd_, a)
             sd_ := add(sd_, 32)
 
+            mstore(sd_, n)
+            sd_ := add(sd_, 32)
+
             mstore(sd_, target)
             sd_ := add(sd_, 32)
 
             mstore(sd_, value)
-            sd_ := add(sd_, 32)
-
-            mstore(sd_, n)
             sd_ := add(sd_, 32)
         }
         memcpy(sd_, i_, input.length);
