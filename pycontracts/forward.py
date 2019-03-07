@@ -16,18 +16,45 @@ class Forward(abc.ABC):
     def nonce(self):
         pass
 
-    def signing_data(self, target, value, data, nonce):
+    def __call__(self, data = b'', target = None, value = 0, nonce = None):
+        if hasattr(data, 'buildTransaction'):
+            t = data.buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
+            data = Web3.toBytes(hexstr = t['data'])
+            if not target:
+                target = t['to']
+
+        if nonce is None:
+            nonce = self.nonce()
+
+        return Call(self, target, value, data, nonce)
+
+    @abc.abstractmethod
+    def transact(self, call, originator):
+        pass
+
+class Call:
+    def __init__(self, contract, target, value, data, nonce, signature = None):
+        self.contract = contract
+        self.target = target
+        self.value = value
+        self.data = data
+        self.nonce = nonce
+        self.signature = signature
+
+    def signing_data(self):
         return keccak(
-            bytes(12) + Web3.toBytes(hexstr=self.address) \
-            + bytes(12) + Web3.toBytes(hexstr=target) \
-            + value.to_bytes(32, 'big') \
-            + nonce.to_bytes(32, 'big') \
-            + data)
+            bytes(12) + Web3.toBytes(hexstr=self.contract.address) \
+            + bytes(12) + Web3.toBytes(hexstr=self.target) \
+            + self.value.to_bytes(32, 'big') \
+            + self.nonce.to_bytes(32, 'big') \
+            + self.data)
 
-    @abc.abstractmethod
-    def sign(self, private_key, target, value, data, nonce):
-        pass
+    def sign(self, private_key):
+        self.signature = private_key.sign_msg_hash(self.signing_data())
+        return self
 
-    @abc.abstractmethod
-    def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
-        pass
+    def transact(self, originator):
+        return self.contract.transact(self, originator)
+
+    def call(self, type=bytes):
+        return self.contract.call(self, type)

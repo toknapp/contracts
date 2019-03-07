@@ -19,7 +19,7 @@ class BasicTests:
 
         echo = deploy(contracts['Echo'])
         i = random.randint(0, 1000)
-        self.assertEqual(self.fwd.call(private_key = self.pk, data = echo.functions.echo(i), type=int), i)
+        self.assertEqual(self.fwd(echo.functions.echo(i)).sign(self.pk).call(int), i)
 
 class UseCaseTests:
     def test_receive_ether(self):
@@ -43,12 +43,10 @@ class UseCaseTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # send all ether
-        self.fwd.transact(
-            private_key = self.pk,
+        self.fwd(
             target = beneficiary,
             value = v,
-            originator = faucets.random()
-        )
+        ).sign(self.pk).transact(faucets.random())
 
         # check that the nonce got bumped
         self.assertEqual(self.fwd.nonce(), 1)
@@ -65,16 +63,12 @@ class UseCaseTests:
         self.assertEqual(contract.functions.fetch(self.fwd.address).call(), 0)
 
         f = faucets.random()
-        self.fwd.transact(
-            private_key = self.pk,
-            data = contract.functions.set(i),
-            originator = f
-        )
+        self.fwd(contract.functions.set(i)).sign(self.pk).transact(f)
 
         self.assertEqual(contract.functions.fetch(self.fwd.address).call(), i)
 
         if hasattr(self.fwd, 'call'):
-            self.assertEqual(self.fwd.call(private_key = self.pk, data = contract.functions.fetch(), type=int), i)
+            self.assertEqual(self.fwd(contract.functions.fetch()).sign(self.pk).call(int), i)
 
     def test_transfer_erc20(self):
         # provision a coin and some tokens
@@ -91,11 +85,7 @@ class UseCaseTests:
         self.assertEqual(contract.functions.balanceOf(beneficiary).call(), 0)
 
         # send all tokens
-        self.fwd.transact(
-            private_key = self.pk,
-            data = contract.functions.transfer(beneficiary, v),
-            originator = faucets.random()
-        )
+        self.fwd(contract.functions.transfer(beneficiary, v)).sign(self.pk).transact(faucets.random())
 
         # check the final balances
         self.assertEqual(contract.functions.balanceOf(self.fwd.address).call(), 0)
@@ -114,12 +104,10 @@ class SecurityTests:
 
         # try calling the contract with an incorrect private key
         with self.assertRaises(ValueError):
-            self.fwd.transact(
-                private_key = fresh.private_key(),
+            self.fwd(
                 target = beneficiary,
                 value = v,
-                originator = faucets.random()
-            )
+            ).sign(fresh.private_key()).transact(faucets.random())
 
         # check the final balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
@@ -140,13 +128,11 @@ class SecurityTests:
         nonce = random.choice(ns)
 
         with self.assertRaises(ValueError):
-            self.fwd.transact(
-                private_key = self.pk,
+            self.fwd(
                 target = beneficiary,
                 value = v,
-                originator = faucets.random(),
-                nonce = nonce
-            )
+                nonce = nonce,
+            ).sign(self.pk).transact(faucets.random())
 
         # check the final balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
@@ -162,12 +148,10 @@ class SecurityTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # make a successful transaction
-        tx = self.fwd.transact(
-            private_key = self.pk,
+        tx = self.fwd(
             target = beneficiary,
             value = v,
-            originator = faucets.random(),
-        )
+        ).sign(self.pk).transact(faucets.random())
 
         # check the intermediate balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), v)
@@ -195,12 +179,10 @@ class SecurityTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # make a successful transaction
-        tx = self.fwd.transact(
-            private_key = self.pk,
+        tx = self.fwd(
             target = beneficiary,
             value = v,
-            originator = faucets.random(),
-        )
+        ).sign(self.pk).transact(faucets.random())
 
         # check the intermediate balances
         self.assertEqual(w3.eth.getBalance(self.fwd.address), 0)
@@ -233,22 +215,18 @@ class SecurityTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # sign a successful transaction
-        f = self.fwd.sign(
-            private_key = self.pk,
+        f = self.fwd(
             target = beneficiary,
             value = value,
             data = b'',
             nonce = None,
-        )
-        v, r, s, _, value, data = f.args
+        ).sign(self.pk)
 
-        other = fresh.address()
+        f.target = fresh.address()
         with self.assertRaises(ValueError):
-            self.fwd.contract.functions.forward(
-                v, r, s, other, value, data
-            ).transact({ 'from': faucets.random() })
+            self.fwd.transact(f, originator = faucets.random())
 
-        self.assertEqual(w3.eth.getBalance(other), 0)
+        self.assertEqual(w3.eth.getBalance(f.target), 0)
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
 
@@ -262,19 +240,17 @@ class SecurityTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # sign a successful transaction
-        f = self.fwd.sign(
-            private_key = self.pk,
+        f = self.fwd(
             target = beneficiary,
             value = value,
             data = b'',
             nonce = None,
-        )
-        v, r, s, beneficiary, _, data = f.args
+        ).sign(self.pk)
+
+        f.value = random.randint(1, value - 1)
 
         with self.assertRaises(ValueError):
-            self.fwd.contract.functions.forward(
-                v, r, s, beneficiary, random.randint(1, value - 1), data
-            ).transact({ 'from': faucets.random() })
+            self.fwd.transact(f, originator = faucets.random())
 
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
@@ -289,19 +265,17 @@ class SecurityTests:
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
 
         # sign a successful transaction
-        f = self.fwd.sign(
-            private_key = self.pk,
+        f = self.fwd(
             target = beneficiary,
             value = value,
             data = os.urandom(10),
             nonce = None,
-        )
-        v, r, s, beneficiary, value, _ = f.args
+        ).sign(self.pk)
+
+        f.data = os.urandom(10)
 
         with self.assertRaises(ValueError):
-            self.fwd.contract.functions.forward(
-                v, r, s, beneficiary, value, os.urandom(10)
-            ).transact({ 'from': faucets.random() })
+            self.fwd.transact(f, originator = faucets.random())
 
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)

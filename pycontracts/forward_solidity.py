@@ -40,29 +40,10 @@ class ForwardSolidity(Forward):
     def nonce(self):
         return self.contract.functions.getNonce().call()
 
-    def sign(self, private_key, target, value, data, nonce):
-        if hasattr(data, 'buildTransaction'):
-            t = data.buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
-            data = Web3.toBytes(hexstr = t['data'])
-            if not target:
-                target = t['to']
-
-        if nonce is None:
-            nonce = self.nonce()
-
-        sig = private_key.sign_msg_hash(
-            self.signing_data(
-                target = target,
-                value = value,
-                data = data,
-                nonce = nonce,
-            )
-        )
-
+    def transact(self, call, originator):
         return self.contract.functions.forward(
-            27 + sig.v, sig.r.to_bytes(32, 'big'), sig.s.to_bytes(32, 'big'),
-            target, value, data
-        )
-
-    def transact(self, private_key, originator, target = None, value = 0, data = b'', nonce = None):
-        return self.sign(private_key, target, value, data, nonce).transact({ 'from': originator })
+            27 + call.signature.v,
+            call.signature.r.to_bytes(32, 'big'),
+            call.signature.s.to_bytes(32, 'big'),
+            call.target, call.value, call.data
+        ).transact({ 'from': originator })
