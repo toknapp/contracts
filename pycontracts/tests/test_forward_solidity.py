@@ -16,3 +16,7 @@ class ForwardSolidityTests(
     def setUp(self):
         self.pk = fresh.private_key()
         self.fwd = self.deploy(address(self.pk))
+
+    def test_wrap(self):
+        c = ForwardSolidity.wrap(w3, self.fwd.address)
+        self.assertEqual(c.owner, address(self.pk))

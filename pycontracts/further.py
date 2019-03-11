@@ -3,13 +3,14 @@ from pycontracts.forward import Forward
 from web3 import Web3
 
 class Further(Forward):
-    def __init__(self, w3, address):
+    def __init__(self, w3, address, owner = None):
         super().__init__(address)
         self.w3 = w3
+        self._owner = owner
 
     @staticmethod
-    def wrap(w3, address):
-        return Further(w3, address)
+    def wrap(w3, address, owner = None):
+        return Further(w3, address, owner)
 
     @staticmethod
     def deploy(w3, owner, originator):
@@ -23,12 +24,14 @@ class Further(Forward):
             'data': init,
         })
         r = w3.eth.waitForTransactionReceipt(tx_hash)
-        return Further.wrap(w3, r.contractAddress)
+        return Further.wrap(w3, r.contractAddress, owner)
 
     @property
     def owner(self):
-        bs = self.w3.eth.call({ 'to': self.address })
-        return Web3.toChecksumAddress(Web3.toHex(bs[:20]))
+        if not self._owner:
+            bs = self.w3.eth.call({ 'to': self.address })
+            self._owner = Web3.toChecksumAddress(Web3.toHex(bs[:20]))
+        return self._owner
 
     def nonce(self):
         bs = self.w3.eth.call({ 'to': self.address })

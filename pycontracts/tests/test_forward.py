@@ -10,6 +10,9 @@ class BasicTests:
     def test_owner(self):
         self.assertEqual(self.fwd.owner, address(self.pk))
 
+    def test_owner(self):
+        self.assertEqual(self.fwd.owner, address(self.pk))
+
     def test_nonce(self):
         self.assertEqual(self.fwd.nonce(), 0)
 
