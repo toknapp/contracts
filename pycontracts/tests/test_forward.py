@@ -17,9 +17,6 @@ class BasicTests:
         self.assertEqual(self.fwd.nonce(), 0)
 
     def test_return_value(self):
-        if not hasattr(self.fwd, 'call'):
-            raise unittest.SkipTest("contract does not support .call")
-
         echo = deploy(contracts['Echo'])
         i = random.randint(0, 1000)
         self.assertEqual(self.fwd(echo.functions.echo(i)).sign(self.pk).call(int), i)

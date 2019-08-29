@@ -32,6 +32,10 @@ class Forward(abc.ABC):
     def transact(self, call, originator):
         pass
 
+    @abc.abstractmethod
+    def call(self, call, type=bytes):
+        pass
+
 class Call:
     def __init__(self, contract, target, value, data, nonce, signature = None):
         self.contract = contract
