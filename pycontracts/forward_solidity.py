@@ -47,3 +47,18 @@ class ForwardSolidity(Forward):
             call.signature.s.to_bytes(32, 'big'),
             call.target, call.value, call.data
         ).transact({ 'from': originator })
+
+    def call(self, call, type=bytes):
+        res = self.contract.functions.forward(
+            27 + call.signature.v,
+            call.signature.r.to_bytes(32, 'big'),
+            call.signature.s.to_bytes(32, 'big'),
+            call.target, call.value, call.data
+        ).call()
+
+        if type == bytes:
+            return res
+        elif type == int:
+            return int.from_bytes(res, 'big')
+        else:
+            raise TypeError(f"unsupported type: {type}")

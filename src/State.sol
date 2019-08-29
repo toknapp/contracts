@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.11;
 
 contract State {
     mapping (address => uint256) private v;

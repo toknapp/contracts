@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.11;
 
 contract Forward {
     address private owner;
@@ -11,8 +11,8 @@ contract Forward {
 
     function forward(
         uint8 v, bytes32 r, bytes32 s,
-        address target, uint256 value, bytes input
-    ) public payable returns (bool) {
+        address target, uint256 value, bytes memory input
+    ) public payable returns (bytes memory) {
         require(
             ecrecover(signingData(target, value, input), v, r, s) == owner,
             "invalid signature"
@@ -20,20 +20,24 @@ contract Forward {
 
         nonce += 1;
 
-        // TODO: handle output data? maybe annoying to do in solidity
-        return target.call.value(value)(input);
+        (bool success, bytes memory output) = target.call.value(value)(input);
+        if(success) {
+                return output;
+        } else {
+                revert(string(output));
+        }
     }
 
     function signingData(
         address target,
         uint256 value,
-        bytes input
+        bytes memory input
     ) public view returns (bytes32) {
         bytes memory sd = new bytes(32+32+32+32+input.length);
         uint sd_;
         uint i_;
         uint256 n = nonce;
-        address a = this;
+        address a = address(this);
         assembly {
             sd_ := add(sd, 32)
             i_ := add(input, 32)
@@ -78,5 +82,5 @@ contract Forward {
     function getNonce() public view returns (uint256) { return nonce; }
     function getOwner() public view returns (address) { return owner; }
 
-    function() public payable { }
+    function() external payable { }
 }

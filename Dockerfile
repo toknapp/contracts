@@ -1,4 +1,4 @@
-FROM ethereum/solc:0.4.24 as contract-builder
+FROM ethereum/solc:0.5.11-alpine as contract-builder
 
 RUN apk add --update make go musl-dev linux-headers
 
