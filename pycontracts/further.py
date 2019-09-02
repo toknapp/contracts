@@ -1,6 +1,7 @@
 from pycontracts import contracts
-from pycontracts.forward import Forward
+from pycontracts.forward import Forward, CallReverted
 from web3 import Web3
+import eth_abi
 
 class Further(Forward):
     def __init__(self, w3, address, owner = None):
@@ -58,11 +59,14 @@ class Further(Forward):
         res = self.w3.eth.call({
             'to': self.address,
             'data': Further.build(call),
-            'gasLimit': 10000000000
+            'gasLimit': 10000000000,
         })
-        if type == bytes:
-            return res
-        elif type == int:
-            return int.from_bytes(res, 'big')
+
+        success, return_data = eth_abi.decode_single("(bool,bytes)", res)
+
+        if success:
+            if type == bytes: return return_data
+            elif type == int: return int.from_bytes(return_data, 'big')
+            else: raise TypeError(f"unsupported type: {type}")
         else:
-            raise TypeError(f"unsupported type: {type}")
+            raise CallReverted(return_data, call, self)

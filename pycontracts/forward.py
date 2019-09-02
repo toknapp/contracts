@@ -62,3 +62,9 @@ class Call:
 
     def call(self, type=bytes):
         return self.contract.call(self, type)
+
+class CallReverted(Exception):
+    def __init__(self, data, call, contract):
+        self.data = data
+        self.call = call
+        self.contract = contract

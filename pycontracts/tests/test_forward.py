@@ -2,6 +2,7 @@ import unittest
 
 from pycontracts.tests.test_settings import *
 from pycontracts.tests import fresh
+from pycontracts.forward import CallReverted
 
 class BasicTests:
     def test_deploy(self):
@@ -20,6 +21,14 @@ class BasicTests:
         mock = deploy(contracts['Mock'])
         i = random.randint(0, 1000)
         self.assertEqual(self.fwd(mock.functions.echo(i)).sign(self.pk).call(int), i)
+
+    def test_revert(self):
+        mock = deploy(contracts['Mock'])
+        s = fresh.string()
+        with self.assertRaises(CallReverted) as e:
+            self.fwd(mock.functions.maybe_fail(False, s)).sign(self.pk).call()
+
+        self.assertEqual(str(e.exception.data, "UTF-8"), s)
 
 class UseCaseTests:
     def test_receive_ether(self):
@@ -67,8 +76,7 @@ class UseCaseTests:
 
         self.assertEqual(contract.functions.fetch(self.fwd.address).call(), i)
 
-        if hasattr(self.fwd, 'call'):
-            self.assertEqual(self.fwd(contract.functions.fetch()).sign(self.pk).call(int), i)
+        self.assertEqual(self.fwd(contract.functions.fetch()).sign(self.pk).call(int), i)
 
     def test_transfer_erc20(self):
         # provision a coin and some tokens

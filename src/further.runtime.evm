@@ -83,6 +83,13 @@ eq
 iszero
 jumpi @sig_failed
 
+push 1
+dup1
+dup1   NB. 1 1 1
+sload  NB. nonce 1 1
+add    NB. (nonce+1) 1
+swap1  NB. 1 (nonce+1)
+sstore NB.
 
 NB. Prepare the stack for the call op
 push 129      NB. offset(data)
@@ -110,31 +117,33 @@ call
 iszero
 jumpi @call_failed
 
-push 1
-dup1
-dup1   NB. 1 1 1
-sload  NB. nonce 1 1
-add    NB. (nonce+1) 1
-swap1  NB. 1 (nonce+1)
-sstore NB.
+NB. return (true, _)
+push 1 NB. 1
+push 0 NB. 0 1
+
+done:
+mstore
+
+NB. copy return data into second cell of tuple
+returndatasize
+push 32
+mstore
 
 returndatasize NB. l
-dup1           NB. l l
-push 0         NB. 0 l l
-dup1           NB. 0 0 l l
-returndatacopy NB. l
-push 0
+push 0         NB. 0 l
+push 64        NB. 64 0 l
+returndatacopy
+
+returndatasize NB. l
+push 64        NB. 64 l
+add
+push 0         NB. 0 (l+64)
 return
 
-NB. TODO test this
-call_failed:
-returndatasize NB. l
-dup1           NB. l l
-push 0         NB. 0 l l
-dup1           NB. 0 0 l l
-returndatacopy NB. l
+call_failed: NB. return (false, _)
 push 0
-revert
+dup1
+jump @done
 
 sig_failed:
 push 1
