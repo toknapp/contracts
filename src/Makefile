@@ -1,6 +1,6 @@
 OUT=build
 
-CONTRACTS=Coin Forward Echo State bare_metal further Mock
+CONTRACTS=Coin Forward State bare_metal further Mock
 
 all: $(foreach c,$(CONTRACTS),$(OUT)/$c.bin)
 

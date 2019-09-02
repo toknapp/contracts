@@ -33,7 +33,7 @@ class BasicSanityChecks(unittest.TestCase):
 
 class ContractSanityChecks(unittest.TestCase):
     def test_echo_call(self):
-        contract = deploy(contracts['Echo'])
+        contract = deploy(contracts['Mock'])
         i = random.randint(0, 1000)
         self.assertEqual(contract.functions.echo(i).call(), i)
 

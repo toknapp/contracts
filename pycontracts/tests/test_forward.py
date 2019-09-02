@@ -17,9 +17,9 @@ class BasicTests:
         self.assertEqual(self.fwd.nonce(), 0)
 
     def test_return_value(self):
-        echo = deploy(contracts['Echo'])
+        mock = deploy(contracts['Mock'])
         i = random.randint(0, 1000)
-        self.assertEqual(self.fwd(echo.functions.echo(i)).sign(self.pk).call(int), i)
+        self.assertEqual(self.fwd(mock.functions.echo(i)).sign(self.pk).call(int), i)
 
 class UseCaseTests:
     def test_receive_ether(self):
