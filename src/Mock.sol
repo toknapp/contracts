@@ -5,11 +5,17 @@ contract Mock {
         return i;
     }
 
-    function maybe_fail(bool yay, string memory s) public pure returns (string memory) {
-        if(yay) {
+    bool private fail = true;
+
+    function maybe_fail(string memory s) public view returns (string memory) {
+        if(!fail) {
             return s;
         } else {
             revert(s);
         }
+    }
+
+    function set_fail(bool f) public {
+        fail = f;
     }
 }

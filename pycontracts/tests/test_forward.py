@@ -26,7 +26,7 @@ class BasicTests:
         mock = deploy(contracts['Mock'])
         s = fresh.string()
         with self.assertRaises(CallReverted) as e:
-            self.fwd(mock.functions.maybe_fail(False, s)).sign(self.pk).call()
+            self.fwd(mock.functions.maybe_fail(s)).sign(self.pk).call()
 
         self.assertEqual(str(e.exception.data, "UTF-8"), s)
 

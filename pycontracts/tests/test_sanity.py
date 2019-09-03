@@ -54,11 +54,12 @@ class ContractSanityChecks(unittest.TestCase):
         mock = deploy(contracts['Mock'])
         s = fresh.string()
 
-        self.assertEqual(mock.functions.maybe_fail(True, s).call(), s)
-
         with self.assertRaises(ValueError) as e:
-            mock.functions.maybe_fail(False, s).call()
+            mock.functions.maybe_fail(s).call()
         self.assertEqual(extract_revert_data(e.exception), s)
+
+        mock.functions.set_fail(False).transact({"from": faucets.random()})
+        self.assertEqual(mock.functions.maybe_fail(s).call(), s)
 
 class ERC20SanityChecks(unittest.TestCase):
     def test_deployment(self):
