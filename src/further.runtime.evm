@@ -68,7 +68,7 @@ push 1   NB. addr
 gas      NB. gas TODO: better calculation?
 call
 iszero
-jumpi @call_failed
+jumpi @sig_failed
 
 returndatasize
 iszero
