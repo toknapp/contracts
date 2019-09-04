@@ -33,7 +33,7 @@ class BasicSanityChecks(unittest.TestCase):
 
 class ContractSanityChecks(unittest.TestCase):
     def test_echo_call(self):
-        contract = deploy(contracts['Echo'])
+        contract = deploy(contracts['Mock'])
         i = random.randint(0, 1000)
         self.assertEqual(contract.functions.echo(i).call(), i)
 
@@ -49,6 +49,17 @@ class ContractSanityChecks(unittest.TestCase):
         contract.functions.set(i).transact({'from': f})
         self.assertEqual(contract.functions.fetch().call({'from': f}), i)
         self.assertEqual(contract.functions.fetch(f).call(), i)
+
+    def test_mock_fail(self):
+        mock = deploy(contracts['Mock'])
+        s = fresh.string()
+
+        with self.assertRaises(ValueError) as e:
+            mock.functions.maybe_fail(s).call()
+        self.assertEqual(extract_revert_data(e.exception), s)
+
+        mock.functions.set_fail(False).transact({"from": faucets.random()})
+        self.assertEqual(mock.functions.maybe_fail(s).call(), s)
 
 class ERC20SanityChecks(unittest.TestCase):
     def test_deployment(self):

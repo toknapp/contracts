@@ -12,7 +12,7 @@ contract Forward {
     function forward(
         uint8 v, bytes32 r, bytes32 s,
         address target, uint256 value, bytes memory input
-    ) public payable returns (bytes memory) {
+    ) public payable returns (bool, bytes memory) {
         require(
             ecrecover(signingData(target, value, input), v, r, s) == owner,
             "invalid signature"
@@ -20,12 +20,7 @@ contract Forward {
 
         nonce += 1;
 
-        (bool success, bytes memory output) = target.call.value(value)(input);
-        if(success) {
-                return output;
-        } else {
-                revert(string(output));
-        }
+        return target.call.value(value)(input);
     }
 
     function signingData(

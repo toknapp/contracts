@@ -1,7 +1,10 @@
 import unittest
 
+import eth_abi
+
 from pycontracts.tests.test_settings import *
 from pycontracts.tests import fresh
+from pycontracts.forward import CallReverted
 
 class BasicTests:
     def test_deploy(self):
@@ -17,9 +20,28 @@ class BasicTests:
         self.assertEqual(self.fwd.nonce(), 0)
 
     def test_return_value(self):
-        echo = deploy(contracts['Echo'])
+        mock = deploy(contracts['Mock'])
         i = random.randint(0, 1000)
-        self.assertEqual(self.fwd(echo.functions.echo(i)).sign(self.pk).call(int), i)
+        self.assertEqual(self.fwd(mock.functions.echo(i)).sign(self.pk).call(int), i)
+
+    def test_revert(self):
+        mock = deploy(contracts['Mock'])
+        s = fresh.string(N=random.randint(0, 1000))
+        with self.assertRaises(CallReverted) as e:
+            self.fwd(mock.functions.maybe_fail(s)).sign(self.pk).call()
+
+        self.assertEqual(str(e.exception.data, "UTF-8"), s)
+
+    def test_reentrancy(self):
+        mock = deploy(contracts['Mock'])
+        i = random.randint(0, 1000)
+
+        n = self.fwd.nonce()
+        inner = self.fwd(mock.functions.echo(i), nonce=n+1).sign(self.pk).build()
+        bs = self.fwd(inner, nonce=n, target=self.fwd.address).sign(self.pk).call()
+        b, bs = eth_abi.decode_single("(bool,bytes)", bs)
+        self.assertTrue(b)
+        self.assertEqual(i, int.from_bytes(bs, "big"))
 
 class UseCaseTests:
     def test_receive_ether(self):
@@ -67,8 +89,7 @@ class UseCaseTests:
 
         self.assertEqual(contract.functions.fetch(self.fwd.address).call(), i)
 
-        if hasattr(self.fwd, 'call'):
-            self.assertEqual(self.fwd(contract.functions.fetch()).sign(self.pk).call(int), i)
+        self.assertEqual(self.fwd(contract.functions.fetch()).sign(self.pk).call(int), i)
 
     def test_transfer_erc20(self):
         # provision a coin and some tokens
@@ -279,3 +300,16 @@ class SecurityTests:
 
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+
+    def test_prevent_replay_of_reverted_call(self):
+        mock = deploy(contracts['Mock'])
+        s = fresh.string(N=random.randint(0, 1000))
+        c = self.fwd(mock.functions.maybe_fail(s)).sign(self.pk)
+
+        tx = self.fwd.transact(c, originator = faucets.random())
+        r = w3.eth.waitForTransactionReceipt(tx)
+
+        mock.functions.set_fail(False).transact({"from": faucets.random()})
+
+        with self.assertRaises(ValueError):
+            self.fwd.transact(c, originator = faucets.random())

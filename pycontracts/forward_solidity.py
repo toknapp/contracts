@@ -1,6 +1,6 @@
 from web3 import Web3
 from pycontracts import contracts
-from pycontracts.forward import Forward
+from pycontracts.forward import Forward, CallReverted
 
 class ForwardSolidity(Forward):
     def __init__(self, contract, owner = None):
@@ -40,25 +40,21 @@ class ForwardSolidity(Forward):
     def nonce(self):
         return self.contract.functions.getNonce().call()
 
-    def transact(self, call, originator):
+    def _build(self, call):
         return self.contract.functions.forward(
             27 + call.signature.v,
-            call.signature.r.to_bytes(32, 'big'),
-            call.signature.s.to_bytes(32, 'big'),
+            call.signature.r.to_bytes(32, "big"),
+            call.signature.s.to_bytes(32, "big"),
             call.target, call.value, call.data
-        ).transact({ 'from': originator })
+        )
+
+    def build(self, call):
+        t = self._build(call).buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
+        return Web3.toBytes(hexstr = t["data"])
+
+    def transact(self, call, originator):
+        return self._build(call).transact({ 'from': originator })
 
     def call(self, call, type=bytes):
-        res = self.contract.functions.forward(
-            27 + call.signature.v,
-            call.signature.r.to_bytes(32, 'big'),
-            call.signature.s.to_bytes(32, 'big'),
-            call.target, call.value, call.data
-        ).call()
-
-        if type == bytes:
-            return res
-        elif type == int:
-            return int.from_bytes(res, 'big')
-        else:
-            raise TypeError(f"unsupported type: {type}")
+        success, return_data = self._build(call).call()
+        return self._handle_result(success, return_data, call, type)

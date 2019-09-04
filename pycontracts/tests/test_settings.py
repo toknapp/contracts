@@ -56,3 +56,6 @@ def deploy(contract, faucet = None):
         return w3.eth.contract(r.contractAddress, abi = contract.get('abi'))
     else:
         return w3.eth.contract(r.contractAddress)
+
+def extract_revert_data(e):
+    return iter(e.args[0]["data"].values()).__next__()["reason"]
