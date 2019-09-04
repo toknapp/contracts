@@ -1,8 +1,6 @@
 from web3 import Web3
 from pycontracts import contracts
 from pycontracts.forward import Forward, CallReverted
-from binascii import hexlify
-import eth_abi
 
 class ForwardSolidity(Forward):
     def __init__(self, contract, owner = None):
@@ -42,30 +40,21 @@ class ForwardSolidity(Forward):
     def nonce(self):
         return self.contract.functions.getNonce().call()
 
-    def transact(self, call, originator):
+    def _build(self, call):
         return self.contract.functions.forward(
             27 + call.signature.v,
-            call.signature.r.to_bytes(32, 'big'),
-            call.signature.s.to_bytes(32, 'big'),
+            call.signature.r.to_bytes(32, "big"),
+            call.signature.s.to_bytes(32, "big"),
             call.target, call.value, call.data
-        ).transact({ 'from': originator })
+        )
+
+    def build(self, call):
+        t = self._build(call).buildTransaction({"nonce": 0, "gas": 0, "gasPrice": 0})
+        return Web3.toBytes(hexstr = t["data"])
+
+    def transact(self, call, originator):
+        return self._build(call).transact({ 'from': originator })
 
     def call(self, call, type=bytes):
-        success, return_data = self.contract.functions.forward(
-            27 + call.signature.v,
-            call.signature.r.to_bytes(32, 'big'),
-            call.signature.s.to_bytes(32, 'big'),
-            call.target, call.value, call.data
-        ).call()
-
-        if success:
-            if type == bytes: return return_data
-            elif type == int: return int.from_bytes(return_data, 'big')
-            else: raise TypeError(f"unsupported type: {type}")
-        else:
-            # keccak_256("Error(string)")[:4] == b'\x08\xc3y\xa0'
-            # https://github.com/ethereum/solidity/blob/22be85921b5b0846295608e997e7af9b08ba9ad9/libsolidity/codegen/CompilerUtils.cpp#L89
-            if len(return_data) >= 36 and return_data[:4] == b'\x08\xc3y\xa0':
-                off = int.from_bytes(return_data[4:4+32], 'big') + 4
-                return_data = eth_abi.decode_single("string", return_data[off:])
-            raise CallReverted(return_data, call, self)
+        success, return_data = self._build(call).call()
+        return self._handle_result(success, return_data, call, type)

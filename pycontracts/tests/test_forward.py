@@ -1,5 +1,7 @@
 import unittest
 
+import eth_abi
+
 from pycontracts.tests.test_settings import *
 from pycontracts.tests import fresh
 from pycontracts.forward import CallReverted
@@ -29,6 +31,17 @@ class BasicTests:
             self.fwd(mock.functions.maybe_fail(s)).sign(self.pk).call()
 
         self.assertEqual(str(e.exception.data, "UTF-8"), s)
+
+    def test_reentrancy(self):
+        mock = deploy(contracts['Mock'])
+        i = random.randint(0, 1000)
+
+        n = self.fwd.nonce()
+        inner = self.fwd(mock.functions.echo(i), nonce=n+1).sign(self.pk).build()
+        bs = self.fwd(inner, nonce=n, target=self.fwd.address).sign(self.pk).call()
+        b, bs = eth_abi.decode_single("(bool,bytes)", bs)
+        self.assertTrue(b)
+        self.assertEqual(i, int.from_bytes(bs, "big"))
 
 class UseCaseTests:
     def test_receive_ether(self):

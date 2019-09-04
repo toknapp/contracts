@@ -125,19 +125,44 @@ done:
 mstore
 
 NB. copy return data into second cell of tuple
-returndatasize
+push 64
 push 32
 mstore
+returndatasize
+push 64
+mstore
 
+NB. right-pad with zeroes
+returndatasize
+push 32
+returndatasize
+mod
+iszero
+jumpi @padded
+push 32        NB. 32 l
+swap1
+div
+push 32
+mul            NB. (l/32)*32
+dup1
+push 32
+add            NB. (l/32+1)*32 (l/32)*32
+swap1
+push 96
+add
+push 0
+swap1
+mstore
+
+padded:
 returndatasize NB. l
 push 0         NB. 0 l
-push 64        NB. 64 0 l
+push 96        NB. 96 0 l
 returndatacopy
 
-returndatasize NB. l
-push 64        NB. 64 l
+push 96
 add
-push 0         NB. 0 (l+64)
+push 0
 return
 
 call_failed: NB. return (false, _)
