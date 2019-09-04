@@ -6,7 +6,10 @@ export PIP = $(VENV)/bin/pip
 export PYTEST = $(VENV)/bin/pytest
 
 run: deps
-	$(PYTEST) --quiet --workers 4 --disable-warnings $(PYTEST_ARGS)
+	env --unset=CONTRACTS_VERSION \
+		$(PYTEST) --quiet --workers 4 --disable-warnings $(PYTEST_ARGS)
+	env CONTRACTS_VERSION=v1.0-RC1 \
+		$(PYTEST) --quiet --workers 4 --disable-warnings $(PYTEST_ARGS)
 
 wait-for-ganache:
 	while ! nc -z $(GANACHE_HOST) $(GANACHE_PORT); do \
