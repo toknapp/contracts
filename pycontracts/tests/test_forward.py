@@ -26,7 +26,7 @@ class BasicTests:
 
     def test_revert(self):
         mock = deploy(contracts['Mock'])
-        s = fresh.string()
+        s = fresh.string(N=random.randint(0, 1000))
         with self.assertRaises(CallReverted) as e:
             self.fwd(mock.functions.maybe_fail(s)).sign(self.pk).call()
 
@@ -300,3 +300,16 @@ class SecurityTests:
 
         self.assertEqual(w3.eth.getBalance(beneficiary), 0)
         self.assertEqual(w3.eth.getBalance(self.fwd.address), value)
+
+    def test_prevent_replay_of_reverted_call(self):
+        mock = deploy(contracts['Mock'])
+        s = fresh.string(N=random.randint(0, 1000))
+        c = self.fwd(mock.functions.maybe_fail(s)).sign(self.pk)
+
+        tx = self.fwd.transact(c, originator = faucets.random())
+        r = w3.eth.waitForTransactionReceipt(tx)
+
+        mock.functions.set_fail(False).transact({"from": faucets.random()})
+
+        with self.assertRaises(ValueError):
+            self.fwd.transact(c, originator = faucets.random())
