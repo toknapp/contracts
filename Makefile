@@ -25,7 +25,7 @@ test: contracts
 	$(MAKE) -C pycontracts run
 
 repl: contracts
-	PYTHONPATH=.:$(PYTHONPATH) python -i pycontracts/tests/test_settings.py
+	PYTHONPATH=.:$(PYTHONPATH) ipython -i pycontracts/tests/test_settings.py
 
 docker-image:
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
