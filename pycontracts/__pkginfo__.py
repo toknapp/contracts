@@ -1,4 +1,4 @@
-__title__ = 'fwdcontracts'
+__title__ = 'ethfwd'
 __description__ = 'Upvest smart contract forwarding tools'
 __url__ = 'https://github.com/toknapp/contracts'
 __version__ = '1.0.0'
