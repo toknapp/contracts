@@ -1,6 +1,13 @@
 MNEMONIC="text fall reveal replace bonus combine swap goat air bonus submit repair"
 GANACHE_PORT ?= 9431
 GANACHE_HOST ?= 127.0.0.1
+
+# work-around docker-for-mac
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+   GANACHE_HOST = docker.for.mac.localhost
+endif
+
 export GANACHE_TARGET=http://$(GANACHE_HOST):$(GANACHE_PORT)
 GANACHE=ganache-cli\
 			--mnemonic=$(MNEMONIC) \
@@ -32,7 +39,7 @@ docker-image:
 
 run-docker: docker-image
 	$(DOCKER) run \
-		--net=host \
+		-p $(GANACHE_PORT):$(GANACHE_PORT) \
 		-e GANACHE_TARGET=$(GANACHE_TARGET) \
 		$(DOCKER_IMAGE) run
 
